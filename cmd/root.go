@@ -14,7 +14,6 @@ var configPath string
 var rootCmd = &cobra.Command{
 	Use:   "pigeomail",
 	Short: "Service which provides securely personal temporary email addresses",
-	Long:  ``, // TODO: Write long description
 
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
 		return nil

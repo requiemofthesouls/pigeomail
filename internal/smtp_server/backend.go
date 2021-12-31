@@ -2,7 +2,6 @@ package smtp_server
 
 import (
 	"github.com/emersion/go-smtp"
-	"pigeomail/internal/repository"
 )
 
 func NewBackend() (b smtp.Backend, err error) {
@@ -11,7 +10,6 @@ func NewBackend() (b smtp.Backend, err error) {
 
 // The Backend implements SMTP server methods.
 type backend struct {
-	repo repository.IEmailRepository
 }
 
 func (b *backend) NewSession(_ smtp.ConnectionState, _ string) (smtp.Session, error) {
