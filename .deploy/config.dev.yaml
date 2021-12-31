@@ -1,0 +1,7 @@
+domain: "shieldemail.ddns.net"
+addr: ":21025"
+read_timeout_seconds: 10
+write_timeout_seconds: 10
+max_message_bytes: 1024
+max_recipients: 50
+allow_insecure_auth: true

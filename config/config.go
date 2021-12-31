@@ -1,31 +1,20 @@
 package config
 
 import (
-	"io/ioutil"
-
-	"gopkg.in/yaml.v2"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
-	Port int64 `yaml:"port"`
+	Domain            string `yaml:"domain"`
+	Addr              string `yaml:"addr"`
+	ReadTimeout       int    `yaml:"read_timeout_seconds"`
+	WriteTimeout      int    `yaml:"write_timeout_seconds"`
+	MaxMessageBytes   int    `yaml:"max_message_bytes"`
+	MaxRecipients     int    `yaml:"max_recipients"`
+	AllowInsecureAuth bool   `yaml:"allow_insecure_auth"`
 }
 
-// Load parses the YAML input into a Config.
-func Load(input []byte) (cfg *Config, err error) {
-	if err = yaml.UnmarshalStrict(input, cfg); err != nil {
-		return nil, err
-	}
-
-	return cfg, nil
-}
-
-// LoadFile parses the given YAML file into a Config
-func LoadFile(filename string) (cfg *Config, err error) {
-	var content []byte
-	if content, err = ioutil.ReadFile(filename); err != nil {
-		return nil, err
-	}
-
-	return Load(content)
-
+func Get() (cfg *Config, err error) {
+	err = viper.Unmarshal(&cfg)
+	return cfg, err
 }
