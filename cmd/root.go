@@ -12,7 +12,7 @@ var configPath string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "public_email",
+	Use:   "pigeomail",
 	Short: "Service which provides securely personal temporary email addresses",
 	Long:  ``, // TODO: Write long description
 

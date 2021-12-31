@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/emersion/go-smtp"
-	"public_email/config"
+	"pigeomail/config"
 )
 
 // build Builds smtp server with options in config

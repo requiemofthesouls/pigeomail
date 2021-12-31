@@ -1,4 +1,4 @@
-module public_email
+module pigeomail
 
 go 1.17
 

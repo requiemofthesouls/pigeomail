@@ -1,6 +1,6 @@
 package main
 
-import "public_email/cmd"
+import "pigeomail/cmd"
 
 func main() {
 	cmd.Execute()

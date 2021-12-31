@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"public_email/internal/smtp_server"
+	"pigeomail/internal/smtp_server"
 )
 
 // receiverCmd represents the receiver command

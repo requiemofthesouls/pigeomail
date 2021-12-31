@@ -2,7 +2,7 @@ package smtp_server
 
 import (
 	"github.com/emersion/go-smtp"
-	"public_email/internal/repository"
+	"pigeomail/internal/repository"
 )
 
 func NewBackend() (b smtp.Backend, err error) {
