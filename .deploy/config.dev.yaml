@@ -13,4 +13,4 @@ smtp:
 telegram:
   token: ""
 
-kafka: {}
+rabbitmq: {}

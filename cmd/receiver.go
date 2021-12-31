@@ -6,6 +6,9 @@ import (
 	"github.com/emersion/go-smtp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streadway/amqp"
+	"pigeomail/rabbitmq"
+
 	"pigeomail/internal/smtp_server"
 )
 
@@ -27,8 +30,14 @@ var receiverCmd = &cobra.Command{
 
 // build Builds smtp server with options in config
 func build() (s *smtp.Server, err error) {
+	var ch *amqp.Channel
+
+	if ch, err = rabbitmq.NewRMQChannel(); err != nil {
+		return nil, err
+	}
+
 	var b smtp.Backend
-	if b, err = smtp_server.NewBackend(); err != nil {
+	if b, err = smtp_server.NewBackend(ch); err != nil {
 		return nil, err
 	}
 

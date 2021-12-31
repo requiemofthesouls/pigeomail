@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.9-management
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+    volumes:
+      - 'rabbitmq_data:/var/lib/rabbitmq/mnesia'
+    networks:
+      - app-tier
+
+#  smtp_server:
+#    build: .
+#    networks:
+#      - smtp_server-tier
+
+volumes:
+  rabbitmq_data:
+    driver: local
+
+
+networks:
+  app-tier:
+    driver: bridge
