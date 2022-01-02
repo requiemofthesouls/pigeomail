@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"pigeomail/internal/telegram"
 )
 
 // tgBotCmd represents the tgBot command
@@ -11,8 +11,18 @@ var tgBotCmd = &cobra.Command{
 	Use:   "tg_bot",
 	Short: "Telegram bot which handles user input",
 	Long:  ``,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("tgBot called")
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var cfg *telegram.Config
+		if err := viper.UnmarshalKey("telegram", &cfg); err != nil {
+			return err
+		}
+
+		tgBot, err := telegram.NewTGBot(cfg)
+		if err != nil {
+			return err
+		}
+		tgBot.Run()
+		return nil
 	},
 }
 
