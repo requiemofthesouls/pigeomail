@@ -4,16 +4,14 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func NewRMQChannel() (*amqp.Channel, error) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	if err != nil {
-		return nil, err
-	}
+type Config struct {
+	DSN string `yaml:"dsn"`
+}
 
-	ch, err := conn.Channel()
-	if err != nil {
-		return nil, err
-	}
+type client struct {
+	ch *amqp.Channel
+}
 
-	return ch, nil
+func NewRMQConnection(dsn string) (*amqp.Connection, error) {
+	return amqp.Dial(dsn)
 }

@@ -13,4 +13,5 @@ smtp:
 telegram:
   token: ""
 
-rabbitmq: {}
+rabbitmq:
+  dsn: "amqp://guest:guest@localhost:5672/"

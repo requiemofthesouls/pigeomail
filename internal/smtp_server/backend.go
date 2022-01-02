@@ -2,20 +2,20 @@ package smtp_server
 
 import (
 	"github.com/emersion/go-smtp"
-	"github.com/streadway/amqp"
+	"pigeomail/rabbitmq"
 )
 
-func NewBackend(ch *amqp.Channel) (b smtp.Backend, err error) {
-	return &backend{ch}, nil
+func NewBackend(p rabbitmq.IRMQEmailPublisher) (b smtp.Backend, err error) {
+	return &backend{publisher: p}, nil
 }
 
 // The Backend implements SMTP server methods.
 type backend struct {
-	ch *amqp.Channel
+	publisher rabbitmq.IRMQEmailPublisher
 }
 
 func (b *backend) NewSession(state *smtp.ConnectionState, hostname string) (smtp.Session, error) {
-	return &Session{b.ch}, nil
+	return &Session{publisher: b.publisher}, nil
 }
 
 func (b *backend) Login(state *smtp.ConnectionState, username, password string) (smtp.Session, error) {

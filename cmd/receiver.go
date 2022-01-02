@@ -6,7 +6,6 @@ import (
 	"github.com/emersion/go-smtp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/streadway/amqp"
 	"pigeomail/rabbitmq"
 
 	"pigeomail/internal/smtp_server"
@@ -30,14 +29,18 @@ var receiverCmd = &cobra.Command{
 
 // build Builds smtp server with options in config
 func build() (s *smtp.Server, err error) {
-	var ch *amqp.Channel
+	var rmqCfg *rabbitmq.Config
+	if err = viper.UnmarshalKey("rabbitmq", &rmqCfg); err != nil {
+		return nil, err
+	}
 
-	if ch, err = rabbitmq.NewRMQChannel(); err != nil {
+	var publisher rabbitmq.IRMQEmailPublisher
+	if publisher, err = rabbitmq.NewRMQEmailPublisher(rmqCfg); err != nil {
 		return nil, err
 	}
 
 	var b smtp.Backend
-	if b, err = smtp_server.NewBackend(ch); err != nil {
+	if b, err = smtp_server.NewBackend(publisher); err != nil {
 		return nil, err
 	}
 
