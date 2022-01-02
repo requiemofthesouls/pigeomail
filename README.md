@@ -1,0 +1,1 @@
+Service which provides securely personal email addresses written in pure Go.
