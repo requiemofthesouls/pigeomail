@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"time"
-
-	"github.com/emersion/go-smtp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"pigeomail/rabbitmq"
@@ -17,49 +14,24 @@ var receiverCmd = &cobra.Command{
 	Short: "SMTP server which listens incoming messages and puts them into message queue",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var s *smtp.Server
 		var err error
-		if s, err = build(); err != nil {
+		var rmqCfg *rabbitmq.Config
+		if err = viper.UnmarshalKey("rabbitmq", &rmqCfg); err != nil {
 			return err
 		}
 
-		return smtp_server.Run(s)
+		var cfg *smtp_server.Config
+		if err = viper.UnmarshalKey("smtp.server", &cfg); err != nil {
+			return err
+		}
+
+		var receiver *smtp_server.Receiver
+		if receiver, err = smtp_server.NewSMTPReceiver(rmqCfg, cfg); err != nil {
+			return err
+		}
+
+		return receiver.Run()
 	},
-}
-
-// build Builds smtp server with options in config
-func build() (s *smtp.Server, err error) {
-	var rmqCfg *rabbitmq.Config
-	if err = viper.UnmarshalKey("rabbitmq", &rmqCfg); err != nil {
-		return nil, err
-	}
-
-	var publisher rabbitmq.IRMQEmailPublisher
-	if publisher, err = rabbitmq.NewRMQEmailPublisher(rmqCfg); err != nil {
-		return nil, err
-	}
-
-	var b smtp.Backend
-	if b, err = smtp_server.NewBackend(publisher); err != nil {
-		return nil, err
-	}
-
-	s = smtp.NewServer(b)
-
-	var cfg *smtp_server.Config
-	if err = viper.UnmarshalKey("smtp.server", &cfg); err != nil {
-		return nil, err
-	}
-
-	s.Addr = cfg.Addr
-	s.Domain = cfg.Domain
-	s.ReadTimeout = time.Duration(cfg.ReadTimeout) * time.Second
-	s.WriteTimeout = time.Duration(cfg.WriteTimeout) * time.Second
-	s.MaxMessageBytes = cfg.MaxMessageBytes * 1024
-	s.MaxRecipients = cfg.MaxRecipients
-	s.AllowInsecureAuth = cfg.AllowInsecureAuth
-
-	return s, nil
 }
 
 func init() {
