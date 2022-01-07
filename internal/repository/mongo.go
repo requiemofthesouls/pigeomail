@@ -70,7 +70,7 @@ func (m *mongoRepo) DeleteEmail(ctx context.Context, email EMail) (err error) {
 	return nil
 }
 
-func (m *mongoRepo) GetUserStateByChatID(ctx context.Context, chatID int64) (state UserState, err error) {
+func (m *mongoRepo) GetUserState(ctx context.Context, chatID int64) (state UserState, err error) {
 	collection := m.client.Database("pigeomail").Collection("state")
 	if err = collection.FindOne(ctx, bson.D{{"chat_id", chatID}}).Decode(&state); err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -87,7 +87,7 @@ func (m *mongoRepo) CreateUserState(ctx context.Context, state UserState) (err e
 	var collection = m.client.Database("pigeomail").Collection("state")
 
 	var oldState UserState
-	if oldState, err = m.GetUserStateByChatID(ctx, state.ChatID); err != nil {
+	if oldState, err = m.GetUserState(ctx, state.ChatID); err != nil {
 		if err != database.ErrNotFound {
 			return err
 		}

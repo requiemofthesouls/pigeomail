@@ -26,7 +26,7 @@ type IEmailRepository interface {
 	CreateEmail(ctx context.Context, email EMail) (err error)
 	DeleteEmail(ctx context.Context, email EMail) (err error)
 
-	GetUserStateByChatID(ctx context.Context, chatID int64) (state UserState, err error)
+	GetUserState(ctx context.Context, chatID int64) (state UserState, err error)
 	CreateUserState(ctx context.Context, state UserState) (err error)
 	DeleteUserState(ctx context.Context, state UserState) (err error)
 }

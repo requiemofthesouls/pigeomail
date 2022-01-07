@@ -15,7 +15,7 @@ func (b *Bot) handleUserInput(update *tgbotapi.Update) {
 
 	var state repository.UserState
 	var err error
-	if state, err = b.repo.GetUserStateByChatID(ctx, update.Message.Chat.ID); err != nil {
+	if state, err = b.repo.GetUserState(ctx, update.Message.Chat.ID); err != nil {
 		log.Println("error: " + err.Error())
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Internal error, please try again later...")
 		b.api.Send(msg)
