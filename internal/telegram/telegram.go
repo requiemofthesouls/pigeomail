@@ -35,7 +35,7 @@ func (b *Bot) handleCommand(update *tgbotapi.Update) {
 	// Extract the command from the Message.
 	switch update.Message.Command() {
 	case createCommand:
-		b.handleCreateCommand(update)
+		b.handleCreateCommandStep1(update)
 	case listCommand:
 		b.handleListCommand(update)
 	case deleteCommand:

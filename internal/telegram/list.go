@@ -2,7 +2,9 @@ package telegram
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"pigeomail/database"
@@ -12,9 +14,11 @@ const listCommand = "list"
 
 func (b *Bot) handleListCommand(update *tgbotapi.Update) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-	msg.Text = listCommand + " command in development, stay tuned..."
 
-	email, err := b.repo.GetEmailByChatID(context.TODO(), update.Message.Chat.ID)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	email, err := b.repo.GetEmailByChatID(ctx, update.Message.Chat.ID)
 	if err != nil && err == database.ErrNotFound {
 		msg.Text = "Email not found, /create a new one."
 		b.api.Send(msg)
@@ -22,12 +26,13 @@ func (b *Bot) handleListCommand(update *tgbotapi.Update) {
 	}
 
 	if err != nil && err != database.ErrNotFound {
-		msg.Text = err.Error()
+		log.Println("error: " + err.Error())
+		msg.Text = "Internal error, please try again later..."
 		b.api.Send(msg)
 		return
 	}
 
-	msg.Text = email.Name
+	msg.Text = fmt.Sprintf("Your active email: <%s>", email.Name)
 
 	if _, err = b.api.Send(msg); err != nil {
 		log.Panic(err)
