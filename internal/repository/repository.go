@@ -13,10 +13,12 @@ type EMail struct {
 type UserState struct {
 	ID     string `bson:"_id,omitempty"`
 	ChatID int64  `json:"chat_id" bson:"chat_id"`
-	State  string `json:"state" bson:"state"`
+	State  state  `json:"state" bson:"state"`
 }
 
-const StateEmailCreationStep2 = "email_creation_step_2"
+type state string
+
+const StateEmailCreationStep2 state = "email_creation_step_2"
 
 type IEmailRepository interface {
 	GetEmailByChatID(ctx context.Context, chatID int64) (email EMail, err error)
