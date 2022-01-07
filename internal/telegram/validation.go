@@ -9,9 +9,5 @@ func validateIncomingMessage(msg *tgbotapi.Message) bool {
 		return false
 	}
 
-	if !msg.IsCommand() { // ignore any non-command Messages
-		return false
-	}
-
 	return true
 }

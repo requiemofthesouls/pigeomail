@@ -29,33 +29,34 @@ func NewTGBot(config *Config) (*tgBot, error) {
 	return &tgBot{api: bot, updates: updates}, nil
 }
 
-func (b *tgBot) handleUserInput(update *tgbotapi.Update) {
-	// Create a new MessageConfig. We don't have text yet,
-	// so we leave it empty.
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-
+func (b *tgBot) handleCommand(update *tgbotapi.Update) {
 	// Extract the command from the Message.
 	switch update.Message.Command() {
 	case createCommand:
-		b.handleCreateCommand(&msg)
+		b.handleCreateCommand(update)
 	case listCommand:
-		b.handleListCommand(&msg)
+		b.handleListCommand(update)
 	case deleteCommand:
-		b.handleDeleteCommand(&msg)
+		b.handleDeleteCommand(update)
 	case helpCommand:
-		b.handleHelpCommand(&msg)
+		b.handleHelpCommand(update)
 	default:
-		msg.Text = "I don't know that command"
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "I don't know that command")
+		if _, err := b.api.Send(msg); err != nil {
+			log.Panic(err)
+		}
 	}
 
-	if _, err := b.api.Send(msg); err != nil {
-		log.Panic(err)
-	}
 }
 
 func (b *tgBot) Run() {
 	for update := range b.updates {
 		if !validateIncomingMessage(update.Message) {
+			continue
+		}
+
+		if update.Message.IsCommand() {
+			b.handleCommand(&update)
 			continue
 		}
 
