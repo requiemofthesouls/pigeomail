@@ -4,14 +4,16 @@ import (
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"pigeomail/internal/repository"
 )
 
-type tgBot struct {
+type Bot struct {
 	api     *tgbotapi.BotAPI
 	updates tgbotapi.UpdatesChannel
+	repo    repository.IEmailRepository
 }
 
-func NewTGBot(config *Config) (*tgBot, error) {
+func NewTGBot(config *Config, repo repository.IEmailRepository) (*Bot, error) {
 	bot, err := tgbotapi.NewBotAPI(config.Token)
 	if err != nil {
 		return nil, err
@@ -26,10 +28,10 @@ func NewTGBot(config *Config) (*tgBot, error) {
 
 	updates := bot.GetUpdatesChan(u)
 
-	return &tgBot{api: bot, updates: updates}, nil
+	return &Bot{api: bot, updates: updates, repo: repo}, nil
 }
 
-func (b *tgBot) handleCommand(update *tgbotapi.Update) {
+func (b *Bot) handleCommand(update *tgbotapi.Update) {
 	// Extract the command from the Message.
 	switch update.Message.Command() {
 	case createCommand:
@@ -49,7 +51,7 @@ func (b *tgBot) handleCommand(update *tgbotapi.Update) {
 
 }
 
-func (b *tgBot) Run() {
+func (b *Bot) Run() {
 	for update := range b.updates {
 		if !validateIncomingMessage(update.Message) {
 			continue

@@ -8,7 +8,7 @@ import (
 
 const deleteCommand = "delete"
 
-func (b *tgBot) handleDeleteCommand(update *tgbotapi.Update) {
+func (b *Bot) handleDeleteCommand(update *tgbotapi.Update) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	msg.Text = deleteCommand + " command in development, stay tuned..."
 

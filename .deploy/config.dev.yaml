@@ -15,3 +15,9 @@ telegram:
 
 rabbitmq:
   dsn: "amqp://guest:guest@localhost:5672/"
+
+database:
+  hostname: "localhost"
+  port: 27017
+  username: "root"
+  password: "example"

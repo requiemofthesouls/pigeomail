@@ -3,6 +3,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"pigeomail/database"
+	"pigeomail/internal/repository"
 	"pigeomail/internal/telegram"
 )
 
@@ -11,17 +13,28 @@ var tgBotCmd = &cobra.Command{
 	Use:   "tg_bot",
 	Short: "Telegram bot which handles user input",
 	Long:  ``,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var cfg *telegram.Config
-		if err := viper.UnmarshalKey("telegram", &cfg); err != nil {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var tgCfg *telegram.Config
+		if err = viper.UnmarshalKey("telegram", &tgCfg); err != nil {
 			return err
 		}
 
-		tgBot, err := telegram.NewTGBot(cfg)
-		if err != nil {
+		var dbCfg *database.Config
+		if err = viper.UnmarshalKey("database", &dbCfg); err != nil {
 			return err
 		}
-		tgBot.Run()
+
+		var repo repository.IEmailRepository
+		if repo, err = repository.NewMongoRepository(dbCfg); err != nil {
+			return err
+		}
+
+		var bot *telegram.Bot
+		if bot, err = telegram.NewTGBot(tgCfg, repo); err != nil {
+			return err
+		}
+
+		bot.Run()
 		return nil
 	},
 }

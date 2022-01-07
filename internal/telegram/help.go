@@ -8,7 +8,7 @@ import (
 
 const helpCommand = "help"
 
-func (b *tgBot) handleHelpCommand(update *tgbotapi.Update) {
+func (b *Bot) handleHelpCommand(update *tgbotapi.Update) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	msg.Text = `
 
