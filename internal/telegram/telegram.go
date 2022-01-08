@@ -39,7 +39,7 @@ func (b *Bot) handleCommand(update *tgbotapi.Update) {
 	case listCommand:
 		b.handleListCommand(update)
 	case deleteCommand:
-		b.handleDeleteCommand(update)
+		b.handleDeleteCommandStep1(update)
 	case helpCommand:
 		b.handleHelpCommand(update)
 	default:

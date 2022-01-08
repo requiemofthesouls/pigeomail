@@ -18,13 +18,14 @@ type UserState struct {
 
 type state string
 
-const StateEmailCreationStep2 state = "email_creation_step_2"
+const StateCreateEmailStep1 state = "create_email_step_1"
+const StateDeleteEmailStep1 state = "delete_email_step_1"
 
 type IEmailRepository interface {
 	GetEmailByChatID(ctx context.Context, chatID int64) (email EMail, err error)
 	GetEmailByName(ctx context.Context, name string) (email EMail, err error)
 	CreateEmail(ctx context.Context, email EMail) (err error)
-	DeleteEmail(ctx context.Context, email EMail) (err error)
+	DeleteEmail(ctx context.Context, chatID int64) (err error)
 
 	GetUserState(ctx context.Context, chatID int64) (state UserState, err error)
 	CreateUserState(ctx context.Context, state UserState) (err error)

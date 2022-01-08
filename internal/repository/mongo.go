@@ -56,13 +56,10 @@ func (m *mongoRepo) CreateEmail(ctx context.Context, email EMail) (err error) {
 	return nil
 }
 
-func (m *mongoRepo) DeleteEmail(ctx context.Context, email EMail) (err error) {
+func (m *mongoRepo) DeleteEmail(ctx context.Context, chatID int64) (err error) {
 	collection := m.client.Database("pigeomail").Collection("email")
 	if _, err = collection.DeleteOne(ctx,
-		bson.M{
-			"name":    email.Name,
-			"chat_id": email.ChatID,
-		},
+		bson.M{"chat_id": chatID},
 	); err != nil {
 		return err
 	}

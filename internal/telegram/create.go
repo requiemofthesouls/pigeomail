@@ -34,7 +34,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 
 	if err = b.repo.CreateUserState(ctx, repository.UserState{
 		ChatID: update.Message.Chat.ID,
-		State:  repository.StateEmailCreationStep2,
+		State:  repository.StateCreateEmailStep1,
 	}); err != nil {
 		log.Println("error: " + err.Error())
 		b.internalErrorResponse(update.Message.Chat.ID)
@@ -84,14 +84,14 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 
 	if err = b.repo.DeleteUserState(ctx, repository.UserState{
 		ChatID: update.Message.Chat.ID,
-		State:  repository.StateEmailCreationStep2,
+		State:  repository.StateCreateEmailStep1,
 	}); err != nil {
 		log.Println("error: " + err.Error())
 		b.internalErrorResponse(update.Message.Chat.ID)
 		return
 	}
 
-	msg.Text = fmt.Sprintf("Email <%s> has been created succesfully.", update.Message.Text)
+	msg.Text = fmt.Sprintf("Email <%s> has been created successfully.", update.Message.Text)
 
 	if _, err = b.api.Send(msg); err != nil {
 		log.Panic(err)

@@ -22,9 +22,10 @@ func (b *Bot) handleUserInput(update *tgbotapi.Update) {
 	}
 
 	switch state.State {
-	case repository.StateEmailCreationStep2:
+	case repository.StateCreateEmailStep1:
 		b.handleCreateCommandStep2(update)
-		return
+	case repository.StateDeleteEmailStep1:
+		b.handleDeleteCommandStep2(update)
 	}
 
 }
