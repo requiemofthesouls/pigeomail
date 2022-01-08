@@ -27,8 +27,7 @@ func (b *Bot) handleListCommand(update *tgbotapi.Update) {
 
 	if err != nil && err != database.ErrNotFound {
 		log.Println("error: " + err.Error())
-		msg.Text = "Internal error, please try again later..."
-		b.api.Send(msg)
+		b.internalErrorResponse(update.Message.Chat.ID)
 		return
 	}
 

@@ -22,8 +22,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 	email, err := b.repo.GetEmailByChatID(ctx, update.Message.Chat.ID)
 	if err != nil && err != database.ErrNotFound {
 		log.Println("error: " + err.Error())
-		msg.Text = "Internal error, please try again later..."
-		b.api.Send(msg)
+		b.internalErrorResponse(update.Message.Chat.ID)
 		return
 	}
 
@@ -38,8 +37,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 		State:  repository.StateEmailCreationStep2,
 	}); err != nil {
 		log.Println("error: " + err.Error())
-		msg.Text = "Internal error, please try again later..."
-		b.api.Send(msg)
+		b.internalErrorResponse(update.Message.Chat.ID)
 		return
 	}
 
@@ -57,20 +55,15 @@ func validateMailboxName() bool {
 }
 
 func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
-	// TODO: check if email has been already created (unique)
-	// TODO: if ok -> return message ("email has been created") and create record in DB
-	// TODO: if !ok -> return message ("something gone wrong")
-
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
 	email, err := b.repo.GetEmailByName(ctx, update.Message.Text)
 	if err != nil && err != database.ErrNotFound {
 		log.Println("error: " + err.Error())
-		msg.Text = "Internal error, please try again later..."
-		b.api.Send(msg)
+		b.internalErrorResponse(update.Message.Chat.ID)
 		return
 	}
 
@@ -85,8 +78,7 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 		Name:   update.Message.Text,
 	}); err != nil {
 		log.Println("error: " + err.Error())
-		msg.Text = "Internal error, please try again later..."
-		b.api.Send(msg)
+		b.internalErrorResponse(update.Message.Chat.ID)
 		return
 	}
 
@@ -95,8 +87,7 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 		State:  repository.StateEmailCreationStep2,
 	}); err != nil {
 		log.Println("error: " + err.Error())
-		msg.Text = "Internal error, please try again later..."
-		b.api.Send(msg)
+		b.internalErrorResponse(update.Message.Chat.ID)
 		return
 	}
 

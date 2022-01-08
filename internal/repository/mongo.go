@@ -59,9 +59,9 @@ func (m *mongoRepo) CreateEmail(ctx context.Context, email EMail) (err error) {
 func (m *mongoRepo) DeleteEmail(ctx context.Context, email EMail) (err error) {
 	collection := m.client.Database("pigeomail").Collection("email")
 	if _, err = collection.DeleteOne(ctx,
-		bson.D{
-			{"name", email.Name},
-			{"chat_id", email.ChatID},
+		bson.M{
+			"name":    email.Name,
+			"chat_id": email.ChatID,
 		},
 	); err != nil {
 		return err
@@ -72,7 +72,7 @@ func (m *mongoRepo) DeleteEmail(ctx context.Context, email EMail) (err error) {
 
 func (m *mongoRepo) GetUserState(ctx context.Context, chatID int64) (state UserState, err error) {
 	collection := m.client.Database("pigeomail").Collection("state")
-	if err = collection.FindOne(ctx, bson.D{{"chat_id", chatID}}).Decode(&state); err != nil {
+	if err = collection.FindOne(ctx, bson.M{"chat_id": chatID}).Decode(&state); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return state, database.ErrNotFound
 		}
@@ -114,11 +114,11 @@ func (m *mongoRepo) CreateUserState(ctx context.Context, state UserState) (err e
 }
 
 func (m *mongoRepo) DeleteUserState(ctx context.Context, state UserState) (err error) {
-	collection := m.client.Database("pigeomail").Collection("email")
-	if _, err = collection.DeleteOne(ctx,
-		bson.D{
-			{"chat_id", state.ChatID},
-			{"state", state.State},
+	collection := m.client.Database("pigeomail").Collection("state")
+	if _, err = collection.DeleteMany(ctx,
+		bson.M{
+			"chat_id": state.ChatID,
+			"state":   state.State,
 		},
 	); err != nil {
 		return err
