@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"pigeomail/database"
 	"pigeomail/internal/repository"
+	"pigeomail/internal/smtp_server"
 	"pigeomail/internal/telegram"
 	"pigeomail/rabbitmq"
 )
@@ -35,8 +36,13 @@ var tgBotCmd = &cobra.Command{
 			return err
 		}
 
+		var smtpCfg *smtp_server.Config
+		if err = viper.UnmarshalKey("smtp.server", &smtpCfg); err != nil {
+			return err
+		}
+
 		var bot *telegram.Bot
-		if bot, err = telegram.NewTGBot(tgCfg, rmqCfg, repo); err != nil {
+		if bot, err = telegram.NewTGBot(tgCfg, rmqCfg, repo, smtpCfg.Domain); err != nil {
 			return err
 		}
 

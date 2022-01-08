@@ -17,9 +17,10 @@ type Bot struct {
 	updates  tgbotapi.UpdatesChannel
 	repo     repository.IEmailRepository
 	consumer rabbitmq.IRMQEmailConsumer
+	domain   string
 }
 
-func NewTGBot(config *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailRepository) (*Bot, error) {
+func NewTGBot(config *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailRepository, domain string) (*Bot, error) {
 	bot, err := tgbotapi.NewBotAPI(config.Token)
 	if err != nil {
 		return nil, err
@@ -44,6 +45,7 @@ func NewTGBot(config *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailRep
 		updates:  updates,
 		repo:     repo,
 		consumer: consumer,
+		domain:   domain,
 	}, nil
 }
 

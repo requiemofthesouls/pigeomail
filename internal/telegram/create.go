@@ -27,7 +27,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 	}
 
 	if err == nil {
-		msg.Text = "Email already created: " + email.Name
+		msg.Text = "Email already created: " + email.Name + "@" + b.domain
 		b.api.Send(msg)
 		return
 	}
@@ -68,14 +68,14 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 	}
 
 	if err == nil {
-		msg.Text = fmt.Sprintf("Email <%s> already exists, please choose a new one.", email.Name)
+		msg.Text = fmt.Sprintf("Email <%s> already exists, please choose a new one.", email.Name+"@"+b.domain)
 		b.api.Send(msg)
 		return
 	}
 
 	if err = b.repo.CreateEmail(ctx, repository.EMail{
 		ChatID: update.Message.Chat.ID,
-		Name:   update.Message.Text,
+		Name:   update.Message.Text + "@" + b.domain,
 	}); err != nil {
 		log.Println("error: " + err.Error())
 		b.internalErrorResponse(update.Message.Chat.ID)
@@ -91,7 +91,7 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 		return
 	}
 
-	msg.Text = fmt.Sprintf("Email <%s> has been created successfully.", update.Message.Text)
+	msg.Text = fmt.Sprintf("Email <%s> has been created successfully.", update.Message.Text+"@"+b.domain)
 
 	if _, err = b.api.Send(msg); err != nil {
 		log.Panic(err)
