@@ -58,7 +58,7 @@ func (b *Bot) handleCommand(update *tgbotapi.Update) {
 		b.handleListCommand(update)
 	case deleteCommand:
 		b.handleDeleteCommandStep1(update)
-	case helpCommand:
+	case helpCommand, startCommand:
 		b.handleHelpCommand(update)
 	default:
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "I don't know that command")

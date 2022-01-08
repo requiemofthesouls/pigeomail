@@ -6,7 +6,10 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const helpCommand = "help"
+const (
+	helpCommand  = "help"
+	startCommand = "start"
+)
 
 func (b *Bot) handleHelpCommand(update *tgbotapi.Update) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
