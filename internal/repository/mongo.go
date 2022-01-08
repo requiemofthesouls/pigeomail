@@ -12,6 +12,20 @@ type mongoRepo struct {
 	client *mongo.Client
 }
 
+func (m *mongoRepo) GetChatIDByEmail(ctx context.Context, email string) (_ int64, err error) {
+	var result EMail
+	var collection = m.client.Database("pigeomail").Collection("email")
+	if err = collection.FindOne(ctx, bson.D{{"name", email}}).Decode(&result); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return 0, database.ErrNotFound
+		}
+
+		return 0, err
+	}
+
+	return result.ChatID, nil
+}
+
 func NewMongoRepository(cfg *database.Config) (_ IEmailRepository, err error) {
 	var client *mongo.Client
 	if client, err = database.NewMongoDBClient(cfg); err != nil {

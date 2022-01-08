@@ -23,6 +23,7 @@ const StateDeleteEmailStep1 state = "delete_email_step_1"
 
 type IEmailRepository interface {
 	GetEmailByChatID(ctx context.Context, chatID int64) (email EMail, err error)
+	GetChatIDByEmail(ctx context.Context, email string) (chatID int64, err error)
 	GetEmailByName(ctx context.Context, name string) (email EMail, err error)
 	CreateEmail(ctx context.Context, email EMail) (err error)
 	DeleteEmail(ctx context.Context, chatID int64) (err error)

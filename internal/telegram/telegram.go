@@ -1,7 +1,10 @@
 package telegram
 
 import (
+	"context"
+	"fmt"
 	"log"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/streadway/amqp"
@@ -64,13 +67,56 @@ func (b *Bot) handleCommand(update *tgbotapi.Update) {
 
 }
 
-func incomingEmailConsumer(msg amqp.Delivery) {
+func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
 	log.Printf("Received a message: %s", msg.Body)
+
+	from, ok := msg.Headers["from"]
+	if !ok {
+		log.Println("error to extract 'from' header from message")
+		msg.Reject(false)
+	}
+
+	to, ok := msg.Headers["to"]
+	if !ok {
+		log.Println("error to extract 'to' header from message")
+		msg.Reject(false)
+	}
+
+	subject, ok := msg.Headers["subject"]
+	if !ok {
+		log.Println("error to extract 'subject' header from message")
+		msg.Reject(false)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	chatID, err := b.repo.GetChatIDByEmail(ctx, to.(string))
+	if err != nil {
+		log.Printf("error to find chatID for email <%s>", to)
+		msg.Reject(false)
+	}
+
+	textTemplate := `
+*From:* <%s>
+*To:* <%s>
+*Subject*: '%s'
+----------------
+%s
+----------------
+`
+	text := fmt.Sprintf(textTemplate, from, to, subject, msg.Body)
+
+	tgMsg := tgbotapi.NewMessage(chatID, text)
+	tgMsg.ParseMode = "markdown"
+
+	b.api.Send(tgMsg)
+
 	msg.Ack(false)
 }
 
 func (b *Bot) runConsumer() {
-	b.consumer.ConsumeIncomingEmail(incomingEmailConsumer)
+	b.consumer.ConsumeIncomingEmail(b.incomingEmailConsumer)
 }
 
 func (b *Bot) Run() {
