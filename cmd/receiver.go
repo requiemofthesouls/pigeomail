@@ -3,6 +3,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"pigeomail/database"
+	"pigeomail/internal/repository"
 	"pigeomail/rabbitmq"
 
 	"pigeomail/internal/smtp_server"
@@ -20,13 +22,23 @@ var receiverCmd = &cobra.Command{
 			return err
 		}
 
-		var cfg *smtp_server.Config
-		if err = viper.UnmarshalKey("smtp.server", &cfg); err != nil {
+		var smtpCfg *smtp_server.Config
+		if err = viper.UnmarshalKey("smtp.server", &smtpCfg); err != nil {
+			return err
+		}
+
+		var dbCfg *database.Config
+		if err = viper.UnmarshalKey("database", &dbCfg); err != nil {
+			return err
+		}
+
+		var repo repository.IEmailRepository
+		if repo, err = repository.NewMongoRepository(dbCfg); err != nil {
 			return err
 		}
 
 		var receiver *smtp_server.Receiver
-		if receiver, err = smtp_server.NewSMTPReceiver(rmqCfg, cfg); err != nil {
+		if receiver, err = smtp_server.NewSMTPReceiver(rmqCfg, smtpCfg, repo); err != nil {
 			return err
 		}
 

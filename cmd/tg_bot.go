@@ -6,6 +6,7 @@ import (
 	"pigeomail/database"
 	"pigeomail/internal/repository"
 	"pigeomail/internal/telegram"
+	"pigeomail/rabbitmq"
 )
 
 // tgBotCmd represents the tgBot command
@@ -29,8 +30,13 @@ var tgBotCmd = &cobra.Command{
 			return err
 		}
 
+		var rmqCfg *rabbitmq.Config
+		if err = viper.UnmarshalKey("rabbitmq", &rmqCfg); err != nil {
+			return err
+		}
+
 		var bot *telegram.Bot
-		if bot, err = telegram.NewTGBot(tgCfg, repo); err != nil {
+		if bot, err = telegram.NewTGBot(tgCfg, rmqCfg, repo); err != nil {
 			return err
 		}
 

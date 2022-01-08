@@ -23,7 +23,7 @@ func NewRMQEmailPublisher(config *Config) (IRMQEmailPublisher, error) {
 	}
 
 	r := &client{ch: ch}
-	err = r.registerPublisherQueues()
+	err = r.queueDeclare()
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func NewRMQEmailPublisher(config *Config) (IRMQEmailPublisher, error) {
 	return r, nil
 }
 
-func (r *client) registerPublisherQueues() (err error) {
+func (r *client) queueDeclare() (err error) {
 	if _, err = r.ch.QueueDeclare(
 		MessageReceivedQueueName,
 		true,  // durable

@@ -4,16 +4,19 @@ import (
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/streadway/amqp"
 	"pigeomail/internal/repository"
+	"pigeomail/rabbitmq"
 )
 
 type Bot struct {
-	api     *tgbotapi.BotAPI
-	updates tgbotapi.UpdatesChannel
-	repo    repository.IEmailRepository
+	api      *tgbotapi.BotAPI
+	updates  tgbotapi.UpdatesChannel
+	repo     repository.IEmailRepository
+	consumer rabbitmq.IRMQEmailConsumer
 }
 
-func NewTGBot(config *Config, repo repository.IEmailRepository) (*Bot, error) {
+func NewTGBot(config *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailRepository) (*Bot, error) {
 	bot, err := tgbotapi.NewBotAPI(config.Token)
 	if err != nil {
 		return nil, err
@@ -28,7 +31,17 @@ func NewTGBot(config *Config, repo repository.IEmailRepository) (*Bot, error) {
 
 	updates := bot.GetUpdatesChan(u)
 
-	return &Bot{api: bot, updates: updates, repo: repo}, nil
+	var consumer rabbitmq.IRMQEmailConsumer
+	if consumer, err = rabbitmq.NewRMQEmailConsumer(rmqCfg); err != nil {
+		return nil, err
+	}
+
+	return &Bot{
+		api:      bot,
+		updates:  updates,
+		repo:     repo,
+		consumer: consumer,
+	}, nil
 }
 
 func (b *Bot) handleCommand(update *tgbotapi.Update) {
@@ -51,7 +64,18 @@ func (b *Bot) handleCommand(update *tgbotapi.Update) {
 
 }
 
+func incomingEmailConsumer(msg amqp.Delivery) {
+	log.Printf("Received a message: %s", msg.Body)
+	msg.Ack(false)
+}
+
+func (b *Bot) runConsumer() {
+	b.consumer.ConsumeIncomingEmail(incomingEmailConsumer)
+}
+
 func (b *Bot) Run() {
+	go b.runConsumer()
+
 	for update := range b.updates {
 		if !validateIncomingMessage(update.Message) {
 			continue

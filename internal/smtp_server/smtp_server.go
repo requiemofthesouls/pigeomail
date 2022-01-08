@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/emersion/go-smtp"
+	"pigeomail/internal/repository"
 	"pigeomail/rabbitmq"
 )
 
@@ -12,14 +13,14 @@ type Receiver struct {
 	server *smtp.Server
 }
 
-func NewSMTPReceiver(rmqCfg *rabbitmq.Config, cfg *Config) (r *Receiver, err error) {
+func NewSMTPReceiver(rmqCfg *rabbitmq.Config, cfg *Config, repo repository.IEmailRepository) (r *Receiver, err error) {
 	var publisher rabbitmq.IRMQEmailPublisher
 	if publisher, err = rabbitmq.NewRMQEmailPublisher(rmqCfg); err != nil {
 		return nil, err
 	}
 
 	var b smtp.Backend
-	if b, err = NewBackend(publisher); err != nil {
+	if b, err = NewBackend(publisher, repo); err != nil {
 		return nil, err
 	}
 
