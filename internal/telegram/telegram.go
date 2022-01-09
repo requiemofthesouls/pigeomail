@@ -3,9 +3,9 @@ package telegram
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
+	"github.com/go-logr/logr"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/streadway/amqp"
 	"pigeomail/internal/repository"
@@ -18,17 +18,24 @@ type Bot struct {
 	repo     repository.IEmailRepository
 	consumer rabbitmq.IRMQEmailConsumer
 	domain   string
+	logger   logr.Logger
 }
 
-func NewTGBot(config *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailRepository, domain string) (*Bot, error) {
+func NewTGBot(
+	config *Config,
+	rmqCfg *rabbitmq.Config,
+	repo repository.IEmailRepository,
+	domain string,
+	log logr.Logger,
+) (*Bot, error) {
 	bot, err := tgbotapi.NewBotAPI(config.Token)
 	if err != nil {
 		return nil, err
 	}
 
-	bot.Debug = true
+	bot.Debug = config.Debug
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	log.Info("authorized", "account", bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -36,7 +43,7 @@ func NewTGBot(config *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailRep
 	updates := bot.GetUpdatesChan(u)
 
 	var consumer rabbitmq.IRMQEmailConsumer
-	if consumer, err = rabbitmq.NewRMQEmailConsumer(rmqCfg); err != nil {
+	if consumer, err = rabbitmq.NewRMQEmailConsumer(rmqCfg, log); err != nil {
 		return nil, err
 	}
 
@@ -46,6 +53,7 @@ func NewTGBot(config *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailRep
 		repo:     repo,
 		consumer: consumer,
 		domain:   domain,
+		logger:   log,
 	}, nil
 }
 
@@ -63,30 +71,28 @@ func (b *Bot) handleCommand(update *tgbotapi.Update) {
 	default:
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "I don't know that command")
 		if _, err := b.api.Send(msg); err != nil {
-			log.Panic(err)
+			b.logger.Error(err, "error send message")
 		}
 	}
 
 }
 
 func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
-	log.Printf("Received a message: %s", msg.Body)
-
 	from, ok := msg.Headers["from"]
 	if !ok {
-		log.Println("error to extract 'from' header from message")
+		b.logger.Error(nil, "error to extract 'from' header from message")
 		msg.Reject(false)
 	}
 
 	to, ok := msg.Headers["to"]
 	if !ok {
-		log.Println("error to extract 'to' header from message")
+		b.logger.Error(nil, "error to extract 'to' header from message")
 		msg.Reject(false)
 	}
 
 	subject, ok := msg.Headers["subject"]
 	if !ok {
-		log.Println("error to extract 'subject' header from message")
+		b.logger.Error(nil, "error to extract 'subject' header from message")
 		msg.Reject(false)
 	}
 
@@ -95,7 +101,7 @@ func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
 
 	chatID, err := b.repo.GetChatIDByEmail(ctx, to.(string))
 	if err != nil {
-		log.Printf("error to find chatID for email <%s>", to)
+		b.logger.Error(err, "chatID not found", "email", to)
 		msg.Reject(false)
 	}
 

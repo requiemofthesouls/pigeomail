@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"github.com/go-logr/logr"
 	"github.com/streadway/amqp"
 )
 
@@ -9,7 +10,8 @@ type Config struct {
 }
 
 type client struct {
-	ch *amqp.Channel
+	ch     *amqp.Channel
+	logger logr.Logger
 }
 
 func NewRMQConnection(dsn string) (*amqp.Connection, error) {

@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"pigeomail/database"
 	"pigeomail/internal/repository"
+	"pigeomail/logger"
 	"pigeomail/rabbitmq"
 
 	"pigeomail/internal/smtp_server"
@@ -37,8 +38,10 @@ var receiverCmd = &cobra.Command{
 			return err
 		}
 
+		var log = logger.New()
+
 		var receiver *smtp_server.Receiver
-		if receiver, err = smtp_server.NewSMTPReceiver(rmqCfg, smtpCfg, repo); err != nil {
+		if receiver, err = smtp_server.NewSMTPReceiver(rmqCfg, smtpCfg, repo, log); err != nil {
 			return err
 		}
 

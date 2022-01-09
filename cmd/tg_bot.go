@@ -7,6 +7,7 @@ import (
 	"pigeomail/internal/repository"
 	"pigeomail/internal/smtp_server"
 	"pigeomail/internal/telegram"
+	"pigeomail/logger"
 	"pigeomail/rabbitmq"
 )
 
@@ -41,8 +42,16 @@ var tgBotCmd = &cobra.Command{
 			return err
 		}
 
+		var log = logger.New()
+
 		var bot *telegram.Bot
-		if bot, err = telegram.NewTGBot(tgCfg, rmqCfg, repo, smtpCfg.Domain); err != nil {
+		if bot, err = telegram.NewTGBot(
+			tgCfg,
+			rmqCfg,
+			repo,
+			smtpCfg.Domain,
+			log,
+		); err != nil {
 			return err
 		}
 
