@@ -1,26 +1,27 @@
 package smtp_server
 
 import (
-	"log"
 	"time"
 
 	"github.com/emersion/go-smtp"
+	"github.com/go-logr/logr"
 	"pigeomail/internal/repository"
 	"pigeomail/rabbitmq"
 )
 
 type Receiver struct {
 	server *smtp.Server
+	logger logr.Logger
 }
 
-func NewSMTPReceiver(rmqCfg *rabbitmq.Config, cfg *Config, repo repository.IEmailRepository) (r *Receiver, err error) {
+func NewSMTPReceiver(rmqCfg *rabbitmq.Config, cfg *Config, repo repository.IEmailRepository, log logr.Logger) (r *Receiver, err error) {
 	var publisher rabbitmq.IRMQEmailPublisher
 	if publisher, err = rabbitmq.NewRMQEmailPublisher(rmqCfg); err != nil {
 		return nil, err
 	}
 
 	var b smtp.Backend
-	if b, err = NewBackend(publisher, repo); err != nil {
+	if b, err = NewBackend(publisher, repo, log); err != nil {
 		return nil, err
 	}
 
@@ -34,11 +35,11 @@ func NewSMTPReceiver(rmqCfg *rabbitmq.Config, cfg *Config, repo repository.IEmai
 	server.MaxRecipients = cfg.MaxRecipients
 	server.AllowInsecureAuth = cfg.AllowInsecureAuth
 
-	return &Receiver{server: server}, nil
+	return &Receiver{server: server, logger: log}, nil
 }
 
 func (r *Receiver) Run() (err error) {
-	log.Println("Starting Receiver at", r.server.Addr)
+	r.logger.Info("starting receiver", "addr", r.server.Addr)
 	if err = r.server.ListenAndServe(); err != nil {
 		return err
 	}
