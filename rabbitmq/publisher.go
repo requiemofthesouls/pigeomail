@@ -1,14 +1,25 @@
 package rabbitmq
 
 import (
-	"github.com/DusanKasan/parsemail"
+	"time"
+
 	"github.com/streadway/amqp"
 )
 
 const MessageReceivedQueueName = "h.pigeomail.MessageReceived"
 
+type ParsedEmail struct {
+	From        string
+	To          string
+	Subject     string
+	ContentType string
+	MessageID   string
+	Date        time.Time
+	Body        []byte
+}
+
 type IRMQEmailPublisher interface {
-	PublishIncomingEmail(email parsemail.Email) error
+	PublishIncomingEmail(msg *ParsedEmail) error
 }
 
 func NewRMQEmailPublisher(config *Config) (IRMQEmailPublisher, error) {
@@ -46,7 +57,7 @@ func (r *client) queueDeclare() (err error) {
 	return nil
 }
 
-func (r *client) PublishIncomingEmail(email parsemail.Email) (err error) {
+func (r *client) PublishIncomingEmail(msg *ParsedEmail) (err error) {
 	err = r.ch.Publish(
 		"",                       // exchange
 		MessageReceivedQueueName, // routing key
@@ -54,13 +65,14 @@ func (r *client) PublishIncomingEmail(email parsemail.Email) (err error) {
 		false,                    // immediate
 		amqp.Publishing{
 			Headers: amqp.Table{
-				"from":    email.From[0].Address,
-				"to":      email.To[0].Address,
-				"subject": email.Subject,
+				"from":    msg.From,
+				"to":      msg.To,
+				"subject": msg.Subject,
+				"date":    msg.Date.Unix(),
 			},
-			ContentType: email.ContentType,
-			Body:        []byte(email.TextBody),
-			MessageId:   email.MessageID,
+			ContentType: msg.ContentType,
+			Body:        msg.Body,
+			MessageId:   msg.MessageID,
 		})
 	if err != nil {
 		return err

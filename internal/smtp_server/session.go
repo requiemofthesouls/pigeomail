@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/ioutil"
+	"net/mail"
+	"regexp"
 	"time"
 
-	"github.com/DusanKasan/parsemail"
 	"github.com/emersion/go-smtp"
 	"github.com/go-logr/logr"
 	"pigeomail/database"
@@ -22,13 +24,6 @@ type Session struct {
 }
 
 var ErrMailNotDelivered = errors.New("mail not delivered")
-
-func (s *Session) AuthPlain(username, password string) error {
-	if username != "username" || password != "password" {
-		return errors.New("Invalid username or password")
-	}
-	return nil
-}
 
 func (s *Session) Mail(from string, opts smtp.MailOptions) error {
 	s.logger.V(10).Info("mail from:", "email", from)
@@ -54,14 +49,71 @@ func (s *Session) Rcpt(to string) error {
 	return nil
 }
 
+func parseMail(r io.Reader) (m *rabbitmq.ParsedEmail, err error) {
+	var msg *mail.Message
+	if msg, err = mail.ReadMessage(r); err != nil {
+		return nil, err
+	}
+
+	var body []byte
+	if body, err = ioutil.ReadAll(msg.Body); err != nil {
+		return nil, err
+	}
+
+	var date time.Time
+	if date, err = msg.Header.Date(); err != nil {
+		return nil, err
+	}
+
+	reg, _ := regexp.Compile(`[\w]+@[\w.]+`)
+
+	var fromAddr string
+	var parsedFromAddr []*mail.Address
+	if parsedFromAddr, err = msg.Header.AddressList("From"); err == nil {
+		fromAddr = parsedFromAddr[0].Address
+	} else {
+		matches := reg.FindStringSubmatch(msg.Header.Get("From"))
+		if len(matches) < 1 {
+			return nil, err
+		}
+		fromAddr = matches[0]
+		err = nil
+	}
+
+	var toAddr string
+	var parsedToAddr []*mail.Address
+	if parsedToAddr, err = msg.Header.AddressList("To"); err == nil {
+		toAddr = parsedToAddr[0].Address
+	} else {
+		matches := reg.FindStringSubmatch(msg.Header.Get("To"))
+		if len(matches) < 1 {
+			return nil, err
+		}
+		toAddr = matches[0]
+		err = nil
+	}
+
+	m = &rabbitmq.ParsedEmail{
+		From:        fromAddr,
+		To:          toAddr,
+		Subject:     msg.Header.Get("Subject"),
+		ContentType: msg.Header.Get("Content-Type"),
+		MessageID:   msg.Header.Get("Message-Id"),
+		Date:        date,
+		Body:        body,
+	}
+
+	return
+}
+
 func (s *Session) Data(r io.Reader) (err error) {
-	var email parsemail.Email
-	if email, err = parsemail.Parse(r); err != nil {
+	var msg *rabbitmq.ParsedEmail
+	if msg, err = parseMail(r); err != nil {
 		s.logger.Error(err, "error parse email")
 		return ErrMailNotDelivered
 	}
 
-	if err = s.publisher.PublishIncomingEmail(email); err != nil {
+	if err = s.publisher.PublishIncomingEmail(msg); err != nil {
 		s.logger.Error(err, "error PublishIncomingEmail")
 		return ErrMailNotDelivered
 	}

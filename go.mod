@@ -3,7 +3,6 @@ module pigeomail
 go 1.17
 
 require (
-	github.com/DusanKasan/parsemail v1.2.0
 	github.com/emersion/go-smtp v0.15.0
 	github.com/go-logr/logr v1.2.2
 	github.com/go-logr/zapr v1.2.2

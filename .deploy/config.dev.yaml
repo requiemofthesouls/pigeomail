@@ -12,6 +12,7 @@ smtp:
 
 telegram:
   token: "your_Bot_token"
+  debug: false
 
 rabbitmq:
   dsn: "amqp://guest:guest@localhost:5672/"
