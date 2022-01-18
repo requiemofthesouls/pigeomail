@@ -6,6 +6,5 @@ import (
 
 func (b *Bot) internalErrorResponse(chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, "Internal error, please try again later...")
-	b.api.Send(msg)
-	return
+	_, _ = b.api.Send(msg)
 }

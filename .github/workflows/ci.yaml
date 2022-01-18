@@ -1,36 +1,65 @@
-name: Build and test Go
+name: Build and test
 on: [push, pull_request]
 jobs:
-  build:
-    name: Build
+  lint:
+    name: Linter
     runs-on: ubuntu-latest
     steps:
-      - name: 'Set up Go 1.17'
-        uses: actions/setup-go@v1
+      - name: Install Go
+        uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: 1.17.x
 
-      - name: 'Check out source code'
-        uses: actions/checkout@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: 'Build'
-        run: go build -o pigeomail main.go
-
-      - name: 'Test'
-        run: go test -v .
-
-      - name: 'Cache Go modules'
-        uses: actions/cache@preview
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v2
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
+          version: v1.31
 
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@master
+  test:
+    name: Testing
+    strategy:
+      matrix:
+        go-version: [ 1.17.x ]
+        platform: [ ubuntu-latest, macos-latest, windows-latest ]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Install Go
+        if: success()
+        uses: actions/setup-go@v2
         with:
-          name: pigeomail
-          path: pigeomail
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run tests
+        run: go test -v -covermode=count
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        if: success()
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Calc coverage
+        run: |
+          go test -v -covermode=count -coverprofile=coverage.out
+
+      - name: Convert coverage.out to coverage.lcov
+        uses: jandelgado/gcov2lcov-action@v1.0.6
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ secrets.github_token }}
+          path-to-lcov: coverage.lcov

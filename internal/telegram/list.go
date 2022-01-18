@@ -6,8 +6,9 @@ import (
 	"log"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"pigeomail/database"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const listCommand = "list"
@@ -21,7 +22,7 @@ func (b *Bot) handleListCommand(update *tgbotapi.Update) {
 	email, err := b.repo.GetEmailByChatID(ctx, update.Message.Chat.ID)
 	if err != nil && err == database.ErrNotFound {
 		msg.Text = "Email not found, /create a new one."
-		b.api.Send(msg)
+		_, _ = b.api.Send(msg)
 		return
 	}
 
@@ -36,5 +37,4 @@ func (b *Bot) handleListCommand(update *tgbotapi.Update) {
 	if _, err = b.api.Send(msg); err != nil {
 		log.Panic(err)
 	}
-
 }

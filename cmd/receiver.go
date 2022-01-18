@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"pigeomail/database"
+	"pigeomail/internal/receiver"
 	"pigeomail/internal/repository"
 	"pigeomail/logger"
 	"pigeomail/rabbitmq"
 
-	"pigeomail/internal/smtp_server"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // receiverCmd represents the receiver command
@@ -23,7 +23,7 @@ var receiverCmd = &cobra.Command{
 			return err
 		}
 
-		var smtpCfg *smtp_server.Config
+		var smtpCfg *receiver.Config
 		if err = viper.UnmarshalKey("smtp.server", &smtpCfg); err != nil {
 			return err
 		}
@@ -40,12 +40,12 @@ var receiverCmd = &cobra.Command{
 
 		var log = logger.New()
 
-		var receiver *smtp_server.Receiver
-		if receiver, err = smtp_server.NewSMTPReceiver(rmqCfg, smtpCfg, repo, log); err != nil {
+		var r *receiver.Receiver
+		if r, err = receiver.NewSMTPReceiver(rmqCfg, smtpCfg, repo, log); err != nil {
 			return err
 		}
 
-		return receiver.Run()
+		return r.Run()
 	},
 }
 

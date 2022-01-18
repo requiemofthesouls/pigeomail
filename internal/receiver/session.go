@@ -1,4 +1,4 @@
-package smtp_server
+package receiver
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/emersion/go-smtp"
-	"github.com/go-logr/logr"
 	"pigeomail/database"
 	"pigeomail/internal/repository"
 	"pigeomail/rabbitmq"
 
+	"github.com/emersion/go-smtp"
+	"github.com/go-logr/logr"
 	"github.com/jhillyerd/enmime"
 )
 
@@ -56,7 +56,7 @@ func (s *Session) parseMail(r io.Reader) (m *rabbitmq.ParsedEmail, err error) {
 		return nil, err
 	}
 
-	reg, _ := regexp.Compile(`[\w]+@[\w.]+`)
+	reg := regexp.MustCompile(`\w+@[\w.]+`)
 
 	var toAddr string
 	if toAddr = e.GetHeader("To"); toAddr != "" {

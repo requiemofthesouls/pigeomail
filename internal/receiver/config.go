@@ -1,4 +1,4 @@
-package smtp_server
+package receiver
 
 type Config struct {
 	Domain            string `yaml:"domain"`

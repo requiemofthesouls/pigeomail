@@ -6,9 +6,10 @@ import (
 	"log"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"pigeomail/database"
 	"pigeomail/internal/repository"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const deleteCommand = "delete"
@@ -23,7 +24,7 @@ func (b *Bot) handleDeleteCommandStep1(update *tgbotapi.Update) {
 	if err != nil {
 		if err == database.ErrNotFound {
 			msg.Text = "There's no created email, use /create." + email.Name
-			b.api.Send(msg)
+			_, _ = b.api.Send(msg)
 			return
 		}
 
@@ -45,7 +46,6 @@ func (b *Bot) handleDeleteCommandStep1(update *tgbotapi.Update) {
 	if _, err = b.api.Send(msg); err != nil {
 		log.Panic(err)
 	}
-
 }
 
 func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
@@ -65,7 +65,7 @@ func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 			return
 		}
 
-		b.api.Send(msg)
+		_, _ = b.api.Send(msg)
 		return
 	}
 
@@ -90,5 +90,4 @@ func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 	if _, err = b.api.Send(msg); err != nil {
 		log.Panic(err)
 	}
-
 }

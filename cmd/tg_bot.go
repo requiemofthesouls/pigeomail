@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"pigeomail/database"
+	"pigeomail/internal/receiver"
 	"pigeomail/internal/repository"
-	"pigeomail/internal/smtp_server"
 	"pigeomail/internal/telegram"
 	"pigeomail/logger"
 	"pigeomail/rabbitmq"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // tgBotCmd represents the tgBot command
@@ -37,7 +38,7 @@ var tgBotCmd = &cobra.Command{
 			return err
 		}
 
-		var smtpCfg *smtp_server.Config
+		var smtpCfg *receiver.Config
 		if err = viper.UnmarshalKey("smtp.server", &smtpCfg); err != nil {
 			return err
 		}

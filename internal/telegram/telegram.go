@@ -6,11 +6,12 @@ import (
 	"html"
 	"time"
 
+	"pigeomail/internal/repository"
+	"pigeomail/rabbitmq"
+
 	"github.com/go-logr/logr"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/streadway/amqp"
-	"pigeomail/internal/repository"
-	"pigeomail/rabbitmq"
 )
 
 type Bot struct {
@@ -75,26 +76,25 @@ func (b *Bot) handleCommand(update *tgbotapi.Update) {
 			b.logger.Error(err, "error send message")
 		}
 	}
-
 }
 
-func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
+func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 	from, ok := msg.Headers["from"]
 	if !ok {
 		b.logger.Error(nil, "error to extract 'from' header from message")
-		msg.Reject(false)
+		_ = msg.Reject(false)
 	}
 
 	to, ok := msg.Headers["to"]
 	if !ok {
 		b.logger.Error(nil, "error to extract 'to' header from message")
-		msg.Reject(false)
+		_ = msg.Reject(false)
 	}
 
 	subject, ok := msg.Headers["subject"]
 	if !ok {
 		b.logger.Error(nil, "error to extract 'subject' header from message")
-		msg.Reject(false)
+		_ = msg.Reject(false)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -103,7 +103,7 @@ func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
 	chatID, err := b.repo.GetChatIDByEmail(ctx, to.(string))
 	if err != nil {
 		b.logger.Error(err, "chatID not found", "email", to)
-		msg.Reject(false)
+		_ = msg.Reject(false)
 	}
 
 	textTemplate := `
@@ -127,10 +127,9 @@ func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
 
 	if _, err = b.api.Send(tgMsg); err != nil {
 		b.logger.Error(err, "error send message")
-
 	}
 
-	msg.Ack(false)
+	_ = msg.Ack(false)
 }
 
 func (b *Bot) runConsumer() {
@@ -141,6 +140,7 @@ func (b *Bot) Run() {
 	go b.runConsumer()
 
 	for update := range b.updates {
+		update := update
 		if !validateIncomingMessage(update.Message) {
 			continue
 		}

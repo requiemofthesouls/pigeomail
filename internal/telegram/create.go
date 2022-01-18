@@ -6,9 +6,10 @@ import (
 	"log"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"pigeomail/database"
 	"pigeomail/internal/repository"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const createCommand = "create"
@@ -28,7 +29,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 
 	if err == nil {
 		msg.Text = "Email already created: " + email.Name + "@" + b.domain
-		b.api.Send(msg)
+		_, _ = b.api.Send(msg)
 		return
 	}
 
@@ -46,9 +47,9 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 	if _, err = b.api.Send(msg); err != nil {
 		log.Panic(err)
 	}
-
 }
 
+// nolint
 func validateMailboxName() bool {
 	// TODO: email validation
 	return true
@@ -69,7 +70,7 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 
 	if err == nil {
 		msg.Text = fmt.Sprintf("Email <%s> already exists, please choose a new one.", email.Name+"@"+b.domain)
-		b.api.Send(msg)
+		_, _ = b.api.Send(msg)
 		return
 	}
 
