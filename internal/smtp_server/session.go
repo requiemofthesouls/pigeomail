@@ -3,7 +3,9 @@ package smtp_server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
+	"regexp"
 	"time"
 
 	"github.com/emersion/go-smtp"
@@ -48,15 +50,27 @@ func (s *Session) Rcpt(to string) error {
 	return nil
 }
 
-func parseMail(r io.Reader) (m *rabbitmq.ParsedEmail, err error) {
+func (s *Session) parseMail(r io.Reader) (m *rabbitmq.ParsedEmail, err error) {
 	var e *enmime.Envelope
 	if e, err = enmime.ReadEnvelope(r); err != nil {
 		return nil, err
 	}
 
+	reg, _ := regexp.Compile(`[\w]+@[\w.]+`)
+
+	var toAddr string
+	if toAddr = e.GetHeader("To"); toAddr != "" {
+		matches := reg.FindStringSubmatch(toAddr)
+		if len(matches) < 1 {
+			return nil, fmt.Errorf("fail to parse destination address: %s", toAddr)
+		}
+
+		toAddr = matches[0]
+	}
+
 	m = &rabbitmq.ParsedEmail{
 		From:        e.GetHeader("From"),
-		To:          e.GetHeader("To"),
+		To:          toAddr,
 		Subject:     e.GetHeader("Subject"),
 		ContentType: e.GetHeader("Content-Type"),
 		MessageID:   e.GetHeader("Message-Id"),
@@ -69,7 +83,7 @@ func parseMail(r io.Reader) (m *rabbitmq.ParsedEmail, err error) {
 
 func (s *Session) Data(r io.Reader) (err error) {
 	var msg *rabbitmq.ParsedEmail
-	if msg, err = parseMail(r); err != nil {
+	if msg, err = s.parseMail(r); err != nil {
 		s.logger.Error(err, "error parse email")
 		return ErrMailNotDelivered
 	}
