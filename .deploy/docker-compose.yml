@@ -27,10 +27,34 @@ services:
     networks:
       - app-tier
 
-#  receiver:
-#    build: .
-#    networks:
-#      - receiver-tier
+  tg_bot:
+    build:
+      dockerfile: build/package/Dockerfile
+      context: ../.
+    volumes:
+      - './config.docker.yaml:/config.yaml'
+    command:
+      - tg_bot
+      - -c
+      - config.yaml
+    networks:
+      - app-tier
+
+  receiver:
+    build:
+      dockerfile: build/package/Dockerfile
+      context: ../.
+    volumes:
+      - './config.docker.yaml:/config.yaml'
+    ports:
+      - '21025:21025'
+    command:
+      - receiver
+      - -c
+      - config.yaml
+    networks:
+      - app-tier
+    restart: "no"
 
 volumes:
   rabbitmq_data:

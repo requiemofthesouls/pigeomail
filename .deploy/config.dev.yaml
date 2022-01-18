@@ -15,10 +15,10 @@ telegram:
   debug: false
 
 rabbitmq:
-  dsn: "amqp://guest:guest@localhost:5672/"
+  dsn: "amqp://guest:guest@rabbitmq:5672/"
 
 database:
-  hostname: "localhost"
+  hostname: "mongo"
   port: 27017
   username: "root"
   password: "example"
