@@ -6,12 +6,13 @@ import (
 	"io"
 	"time"
 
-	"github.com/DusanKasan/parsemail"
 	"github.com/emersion/go-smtp"
 	"github.com/go-logr/logr"
 	"pigeomail/database"
 	"pigeomail/internal/repository"
 	"pigeomail/rabbitmq"
+
+	"github.com/jhillyerd/enmime"
 )
 
 // A Session is returned after EHLO.
@@ -22,13 +23,6 @@ type Session struct {
 }
 
 var ErrMailNotDelivered = errors.New("mail not delivered")
-
-func (s *Session) AuthPlain(username, password string) error {
-	if username != "username" || password != "password" {
-		return errors.New("Invalid username or password")
-	}
-	return nil
-}
 
 func (s *Session) Mail(from string, opts smtp.MailOptions) error {
 	s.logger.V(10).Info("mail from:", "email", from)
@@ -54,14 +48,33 @@ func (s *Session) Rcpt(to string) error {
 	return nil
 }
 
+func parseMail(r io.Reader) (m *rabbitmq.ParsedEmail, err error) {
+	var e *enmime.Envelope
+	if e, err = enmime.ReadEnvelope(r); err != nil {
+		return nil, err
+	}
+
+	m = &rabbitmq.ParsedEmail{
+		From:        e.GetHeader("From"),
+		To:          e.GetHeader("To"),
+		Subject:     e.GetHeader("Subject"),
+		ContentType: e.GetHeader("Content-Type"),
+		MessageID:   e.GetHeader("Message-Id"),
+		Body:        e.Text,
+		HTML:        e.HTML,
+	}
+
+	return m, nil
+}
+
 func (s *Session) Data(r io.Reader) (err error) {
-	var email parsemail.Email
-	if email, err = parsemail.Parse(r); err != nil {
+	var msg *rabbitmq.ParsedEmail
+	if msg, err = parseMail(r); err != nil {
 		s.logger.Error(err, "error parse email")
 		return ErrMailNotDelivered
 	}
 
-	if err = s.publisher.PublishIncomingEmail(email); err != nil {
+	if err = s.publisher.PublishIncomingEmail(msg); err != nil {
 		s.logger.Error(err, "error PublishIncomingEmail")
 		return ErrMailNotDelivered
 	}

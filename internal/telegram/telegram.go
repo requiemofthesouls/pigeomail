@@ -3,6 +3,7 @@ package telegram
 import (
 	"context"
 	"fmt"
+	"html"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -106,19 +107,28 @@ func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
 	}
 
 	textTemplate := `
-*From:* <%s>
-*To:* <%s>
-*Subject*: '%s'
+<b>From:</b> %s
+<b>To:</b> %s
+<b>Subject:</b> %s
 ----------------
 %s
 ----------------
 `
-	text := fmt.Sprintf(textTemplate, from, to, subject, msg.Body)
+	text := fmt.Sprintf(
+		textTemplate,
+		html.EscapeString(from.(string)),
+		html.EscapeString(to.(string)),
+		html.EscapeString(subject.(string)),
+		html.EscapeString(string(msg.Body)),
+	)
 
 	tgMsg := tgbotapi.NewMessage(chatID, text)
-	tgMsg.ParseMode = "markdown"
+	tgMsg.ParseMode = "html"
 
-	b.api.Send(tgMsg)
+	if _, err = b.api.Send(tgMsg); err != nil {
+		b.logger.Error(err, "error send message")
+
+	}
 
 	msg.Ack(false)
 }
