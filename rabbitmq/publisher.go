@@ -15,7 +15,8 @@ type ParsedEmail struct {
 	ContentType string
 	MessageID   string
 	Date        time.Time
-	Body        []byte
+	Body        string
+	HTML        string
 }
 
 type IRMQEmailPublisher interface {
@@ -71,7 +72,7 @@ func (r *client) PublishIncomingEmail(msg *ParsedEmail) (err error) {
 				"date":    msg.Date.Unix(),
 			},
 			ContentType: msg.ContentType,
-			Body:        msg.Body,
+			Body:        []byte(msg.Body),
 			MessageId:   msg.MessageID,
 		})
 	if err != nil {

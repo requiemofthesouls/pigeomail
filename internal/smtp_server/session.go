@@ -4,9 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
-	"net/mail"
-	"regexp"
 	"time"
 
 	"github.com/emersion/go-smtp"
@@ -14,6 +11,8 @@ import (
 	"pigeomail/database"
 	"pigeomail/internal/repository"
 	"pigeomail/rabbitmq"
+
+	"github.com/jhillyerd/enmime"
 )
 
 // A Session is returned after EHLO.
@@ -50,60 +49,22 @@ func (s *Session) Rcpt(to string) error {
 }
 
 func parseMail(r io.Reader) (m *rabbitmq.ParsedEmail, err error) {
-	var msg *mail.Message
-	if msg, err = mail.ReadMessage(r); err != nil {
+	var e *enmime.Envelope
+	if e, err = enmime.ReadEnvelope(r); err != nil {
 		return nil, err
-	}
-
-	var body []byte
-	if body, err = ioutil.ReadAll(msg.Body); err != nil {
-		return nil, err
-	}
-
-	var date time.Time
-	if date, err = msg.Header.Date(); err != nil {
-		return nil, err
-	}
-
-	reg, _ := regexp.Compile(`[\w]+@[\w.]+`)
-
-	var fromAddr string
-	var parsedFromAddr []*mail.Address
-	if parsedFromAddr, err = msg.Header.AddressList("From"); err == nil {
-		fromAddr = parsedFromAddr[0].Address
-	} else {
-		matches := reg.FindStringSubmatch(msg.Header.Get("From"))
-		if len(matches) < 1 {
-			return nil, err
-		}
-		fromAddr = matches[0]
-		err = nil
-	}
-
-	var toAddr string
-	var parsedToAddr []*mail.Address
-	if parsedToAddr, err = msg.Header.AddressList("To"); err == nil {
-		toAddr = parsedToAddr[0].Address
-	} else {
-		matches := reg.FindStringSubmatch(msg.Header.Get("To"))
-		if len(matches) < 1 {
-			return nil, err
-		}
-		toAddr = matches[0]
-		err = nil
 	}
 
 	m = &rabbitmq.ParsedEmail{
-		From:        fromAddr,
-		To:          toAddr,
-		Subject:     msg.Header.Get("Subject"),
-		ContentType: msg.Header.Get("Content-Type"),
-		MessageID:   msg.Header.Get("Message-Id"),
-		Date:        date,
-		Body:        body,
+		From:        e.GetHeader("From"),
+		To:          e.GetHeader("To"),
+		Subject:     e.GetHeader("Subject"),
+		ContentType: e.GetHeader("Content-Type"),
+		MessageID:   e.GetHeader("Message-Id"),
+		Body:        e.Text,
+		HTML:        e.HTML,
 	}
 
-	return
+	return m, nil
 }
 
 func (s *Session) Data(r io.Reader) (err error) {
