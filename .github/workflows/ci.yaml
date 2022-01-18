@@ -1,0 +1,36 @@
+name: Build and test Go
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Set up Go 1.17'
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.17
+
+      - name: 'Check out source code'
+        uses: actions/checkout@v1
+
+      - name: 'Build'
+        run: go build -o pigeomail main.go
+
+      - name: 'Test'
+        run: go test -v .
+
+      - name: 'Cache Go modules'
+        uses: actions/cache@preview
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@master
+        with:
+          name: pigeomail
+          path: pigeomail
