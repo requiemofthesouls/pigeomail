@@ -52,22 +52,22 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 
 }
 
-func (b *Bot) validateMailboxName(email string) bool, string {
+func (b *Bot) validateMailboxName(email string) (bool, string) {
 	if strings.Contains(email, "@") {
 		return false, "please enter mailbox name without domain"
 	}
-	
+
 	if _, err := mail.ParseAddress(email + "@" + b.domain); err != nil {
-	    return false, email + " is not a valid name for mailbox, please choose a new one"
+		return false, email + " is not a valid name for mailbox, please choose a new one"
 	}
-	
-	return true
+
+	return true, ""
 }
 
 func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
-	if ok, text := validateMailboxName(update.Message.Text); !ok {
+	if ok, text := b.validateMailboxName(update.Message.Text); !ok {
 		msg.Text = text
 		b.api.Send(msg)
 		return
