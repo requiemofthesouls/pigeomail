@@ -1,9 +1,9 @@
 # Pigeomail
 
 - Service which provides securely personal email addresses written in pure Go.
-- using this service, through our telegram bot, one can create an email, receive incoming emails.
-- currently you can only recieve emails, but in future we will add sending emails via the bot as well
-- we don't store the emails in the server, but we will keep them in rmq until the user opens the bot to receive those emails.
+- Using this service, through our telegram bot, one can create an email, receive incoming emails.
+- Currently you can only recieve emails, but in future we will add sending emails via the bot as well
+- We don't store the emails in the server, but we will keep them in rmq until the user opens the bot to receive those emails.
 
 # Setting up the project locally:
 
