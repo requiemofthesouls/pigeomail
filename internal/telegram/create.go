@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/mail"
+	"strings"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"pigeomail/database"
 	"pigeomail/internal/repository"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const createCommand = "create"
@@ -49,16 +52,31 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 
 }
 
-func validateMailboxName() bool {
-	// TODO: email validation
-	return true
+func validateMailboxName(email string) bool {
+	// Adding a simple stub string, as validation requires full email address
+	// since user will give us just the name of inbox
+	domainStub := "@pigeomail.com"
+	_, err := mail.ParseAddress(email + domainStub)
+	return err == nil
 }
 
 func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+
+	if strings.Contains(update.Message.Text, "@") {
+		msg.Text = fmt.Sprintf("please don't provide domain name, it is a mailbox, we provide domain for you. <%s> ", update.Message.Text)
+		b.api.Send(msg)
+		return
+	}
+
+	if !validateMailboxName(update.Message.Text) {
+		msg.Text = fmt.Sprintf("<%s> is not a valid name for email inbox, please choose a new one.", update.Message.Text)
+		b.api.Send(msg)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
 	email, err := b.repo.GetEmailByName(ctx, update.Message.Text)
 	if err != nil && err != database.ErrNotFound {
