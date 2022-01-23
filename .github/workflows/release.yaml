@@ -42,11 +42,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Image digest
+      - name: Image tags
         run: |
-          echo ${{ steps.docker_build.outputs.digest }} >> digest.txt
-          cat digest.txt
-
-      - name: Test Image digest
-        run: |
-          cat digest.txt
+          echo ${{ steps.meta.outputs.tags }} >> tags.txt
+          cat tags.txt
