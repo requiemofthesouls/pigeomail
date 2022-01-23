@@ -13,6 +13,11 @@ services:
       - 'rabbitmq_data:/var/lib/rabbitmq/mnesia'
     networks:
       - app-tier
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   mongo:
     image: mongo:5.0.5-focal
@@ -26,11 +31,22 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     networks:
       - app-tier
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   tg_bot:
     build:
       dockerfile: build/package/Dockerfile
       context: ../.
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    restart: always
     volumes:
       - './config.docker.yaml:/config.yaml'
     command:
@@ -44,6 +60,11 @@ services:
     build:
       dockerfile: build/package/Dockerfile
       context: ../.
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
     volumes:
       - './config.docker.yaml:/config.yaml'
     ports:
@@ -54,7 +75,7 @@ services:
       - config.yaml
     networks:
       - app-tier
-    restart: "no"
+    restart: always
 
 volumes:
   rabbitmq_data:

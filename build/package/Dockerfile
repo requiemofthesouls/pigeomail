@@ -13,7 +13,7 @@ RUN go build -o ./build/ci/pigeomail
 ##
 ## Deploy
 ##
-FROM gcr.io/distroless/base-debian10
+FROM alpine:3.15
 
 WORKDIR /
 COPY --from=build /app/build/ci/pigeomail /pigeomail
