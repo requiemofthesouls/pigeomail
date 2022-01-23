@@ -44,5 +44,4 @@ jobs:
 
       - name: Image tags
         run: |
-          echo ${{ steps.meta.outputs.tags }} > tags.txt
-          cat tags.txt
+          echo ${{ steps.meta.outputs.tags }}
