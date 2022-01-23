@@ -38,11 +38,11 @@ jobs:
         with:
           context: .
           file: ./build/package/Dockerfile
-          push: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Image tags
         run: |
-          echo ${{ steps.meta.outputs.tags }} >> tags.txt
+          echo ${{ steps.meta.outputs.tags }} > tags.txt
           cat tags.txt
