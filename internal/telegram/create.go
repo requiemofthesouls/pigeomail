@@ -35,14 +35,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 		return
 	}
 
-	if err = b.repo.CreateUserState(ctx, repository.UserState{
-		ChatID: update.Message.Chat.ID,
-		State:  repository.StateCreateEmailStep1,
-	}); err != nil {
-		log.Println("error: " + err.Error())
-		b.internalErrorResponse(update.Message.Chat.ID)
-		return
-	}
+	_, _ = b.usersFsmManager.SendEvent(update.Message.Chat.ID, CreateEmail)
 
 	msg.Text = "Enter your mailbox name:"
 
@@ -97,14 +90,7 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 		return
 	}
 
-	if err = b.repo.DeleteUserState(ctx, repository.UserState{
-		ChatID: update.Message.Chat.ID,
-		State:  repository.StateCreateEmailStep1,
-	}); err != nil {
-		log.Println("error: " + err.Error())
-		b.internalErrorResponse(update.Message.Chat.ID)
-		return
-	}
+	_, _ = b.usersFsmManager.SendEvent(update.Message.Chat.ID, ChooseEmail)
 
 	msg.Text = fmt.Sprintf("Email <%s> has been created successfully.", update.Message.Text+"@"+b.domain)
 
