@@ -5,8 +5,11 @@ import (
 	"log"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"pigeomail/database"
 	"pigeomail/internal/repository"
+
+	"github.com/getsentry/sentry-go"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func (b *Bot) handleUserInput(update *tgbotapi.Update) {
@@ -16,8 +19,11 @@ func (b *Bot) handleUserInput(update *tgbotapi.Update) {
 	var state repository.UserState
 	var err error
 	if state, err = b.repo.GetUserState(ctx, update.Message.Chat.ID); err != nil {
-		log.Println("error: " + err.Error())
-		b.internalErrorResponse(update.Message.Chat.ID)
+		if err != database.ErrNotFound {
+			log.Println("error: " + err.Error())
+			sentry.CaptureException(err)
+			b.internalErrorResponse(update.Message.Chat.ID)
+		}
 		return
 	}
 

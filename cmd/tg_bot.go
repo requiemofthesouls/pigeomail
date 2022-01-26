@@ -1,14 +1,16 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"pigeomail/database"
 	"pigeomail/internal/repository"
 	"pigeomail/internal/smtp_server"
 	"pigeomail/internal/telegram"
 	"pigeomail/logger"
+	"pigeomail/monitoring"
 	"pigeomail/rabbitmq"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // tgBotCmd represents the tgBot command
@@ -43,6 +45,8 @@ var tgBotCmd = &cobra.Command{
 		}
 
 		var log = logger.New()
+
+		monitoring.InitSentry()
 
 		var bot *telegram.Bot
 		if bot, err = telegram.NewTGBot(
