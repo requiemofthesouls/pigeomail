@@ -31,7 +31,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 	}
 
 	if err == nil {
-		msg.Text = "Email already created: " + email.Name + "@" + b.domain
+		msg.Text = "Email already created: " + email.Name
 		_, _ = b.api.Send(msg)
 		return
 	}
