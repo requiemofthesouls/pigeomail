@@ -1,5 +1,10 @@
 name: Deploy release
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Choose tag for deploy"
+        required: true
 
 jobs:
   deploy:
