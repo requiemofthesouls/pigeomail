@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/mail"
@@ -51,24 +52,24 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 	}
 }
 
-func (b *Bot) validateMailboxName(email string) (bool, string) {
+func (b *Bot) validateMailboxName(email string) (err error) {
 	if strings.Contains(email, "@") {
-		return false, "please enter mailbox name without domain"
+		return errors.New("please enter mailbox name without domain")
 	}
 
-	if _, err := mail.ParseAddress(email + "@" + b.domain); err != nil {
-		return false, email + " is not a valid name for mailbox, please choose a new one"
+	if _, err = mail.ParseAddress(email + "@" + b.domain); err != nil {
+		return errors.New("is not a valid name for mailbox, please choose a new one")
 	}
 
-	return true, ""
+	return nil
 }
 
 func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
-	if ok, text := b.validateMailboxName(update.Message.Text); !ok {
-		msg.Text = text
-		b.api.Send(msg)
+	if err := b.validateMailboxName(update.Message.Text); err != nil {
+		msg.Text = err.Error()
+		_, _ = b.api.Send(msg)
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

@@ -124,11 +124,10 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 		)
 
 		tgMsg := tgbotapi.NewMessage(chatID, text)
-		tgMsg.ParseMode = "html"
+		tgMsg.ParseMode = tgbotapi.ModeHTML
 
 		if _, err = b.api.Send(tgMsg); err != nil {
 			b.logger.Error(err, "error send message")
-
 		}
 
 		for i := 3000; i < len(msg.Body); i += 4096 {
@@ -138,14 +137,14 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 			}
 
 			tgMsg = tgbotapi.NewMessage(chatID, html.EscapeString(string(msg.Body[i:y])))
-			tgMsg.ParseMode = "html"
+			tgMsg.ParseMode = tgbotapi.ModeHTML
 
 			if _, err = b.api.Send(tgMsg); err != nil {
 				b.logger.Error(err, "error send message")
 			}
 		}
 
-		msg.Ack(false)
+		_ = msg.Ack(false)
 		return
 	}
 
@@ -158,7 +157,7 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 	)
 
 	tgMsg := tgbotapi.NewMessage(chatID, text)
-	tgMsg.ParseMode = "html"
+	tgMsg.ParseMode = tgbotapi.ModeHTML
 
 	if _, err = b.api.Send(tgMsg); err != nil {
 		b.logger.Error(err, "error send message")
