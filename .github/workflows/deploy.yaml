@@ -1,5 +1,8 @@
 name: Deploy release
 on:
+  push:
+    branches:
+      - nonexistingbranch
   workflow_dispatch:
     inputs:
       release:
