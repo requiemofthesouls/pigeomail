@@ -114,6 +114,41 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 %s
 ----------------
 `
+	if len(msg.Body) > 4096 {
+		text := fmt.Sprintf(
+			textTemplate,
+			html.EscapeString(from.(string)),
+			html.EscapeString(to.(string)),
+			html.EscapeString(subject.(string)),
+			html.EscapeString(string(msg.Body[:3000])),
+		)
+
+		tgMsg := tgbotapi.NewMessage(chatID, text)
+		tgMsg.ParseMode = "html"
+
+		if _, err = b.api.Send(tgMsg); err != nil {
+			b.logger.Error(err, "error send message")
+
+		}
+
+		for i := 3000; i < len(msg.Body); i += 4096 {
+			y := i + 4096
+			if y > len(msg.Body) {
+				y = len(msg.Body)
+			}
+
+			tgMsg = tgbotapi.NewMessage(chatID, html.EscapeString(string(msg.Body[i:y])))
+			tgMsg.ParseMode = "html"
+
+			if _, err = b.api.Send(tgMsg); err != nil {
+				b.logger.Error(err, "error send message")
+			}
+		}
+
+		msg.Ack(false)
+		return
+	}
+
 	text := fmt.Sprintf(
 		textTemplate,
 		html.EscapeString(from.(string)),
