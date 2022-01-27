@@ -1,4 +1,4 @@
-name: Publish release and docker image
+name: Publish release and deploy
 
 on:
   push:
@@ -50,7 +50,6 @@ jobs:
     permissions:
       contents: write
       packages: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -61,3 +60,19 @@ jobs:
         with:
           draft: false
           prerelease: false
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          port: ${{ secrets.PORT }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.APP_DIR }}
+            git pull
+            bash .deploy/deploy.sh "${{ github.ref_name }}"
