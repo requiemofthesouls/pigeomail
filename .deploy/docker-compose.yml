@@ -64,7 +64,7 @@ services:
     volumes:
       - './config.docker.yaml:/config.yaml'
     ports:
-      - '21025:21025'
+      - '25:21025'
     command:
       - receiver
       - -c

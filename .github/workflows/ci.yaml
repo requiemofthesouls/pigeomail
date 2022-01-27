@@ -19,6 +19,7 @@ jobs:
           version: v1.31
 
   test:
+    needs: build
     name: Testing
     strategy:
       matrix:
@@ -41,6 +42,7 @@ jobs:
           go test -v ./... -covermode=count
 
   coverage:
+    needs: build
     name: Coverage
     runs-on: ubuntu-latest
     steps:
@@ -58,6 +60,7 @@ jobs:
           go test -v ./... -covermode=count -coverprofile=coverage.out
 
   build:
+    needs: lint
     name: Build
     runs-on: ubuntu-latest
     steps:

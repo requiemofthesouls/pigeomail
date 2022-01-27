@@ -18,6 +18,7 @@ FROM alpine:3.15
 WORKDIR /
 COPY --from=build /app/build/ci/pigeomail /pigeomail
 EXPOSE 21025
-USER nonroot:nonroot
+# TODO: fix nonroot user
+#USER nonroot:nonroot
 
 ENTRYPOINT ["/pigeomail"]
