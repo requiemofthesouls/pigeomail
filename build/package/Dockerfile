@@ -8,17 +8,16 @@ WORKDIR /app
 ADD . .
 RUN go mod vendor
 
-RUN go build -o ./build/ci/pigeomail
+RUN go build -o /app/build/ci/pigeomail
 
 ##
 ## Deploy
 ##
-FROM alpine:3.15
+FROM gcr.io/distroless/base-debian11
 
 WORKDIR /
 COPY --from=build /app/build/ci/pigeomail /pigeomail
 EXPOSE 21025
-# TODO: fix nonroot user
-#USER nonroot:nonroot
+USER nonroot:nonroot
 
-ENTRYPOINT ["/pigeomail"]
+ENTRYPOINT ["./pigeomail"]

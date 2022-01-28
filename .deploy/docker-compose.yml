@@ -1,3 +1,6 @@
+# run local build
+# docker-compose up
+
 version: "3"
 
 services:
@@ -38,7 +41,9 @@ services:
       retries: 5
 
   tg_bot:
-    image: "ghcr.io/requiemofthesouls/pigeomail:${PIGEOMAIL_VERSION}"
+    build:
+      dockerfile: build/package/Dockerfile
+      context: ../.
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -55,7 +60,9 @@ services:
       - app-tier
 
   receiver:
-    image: "ghcr.io/requiemofthesouls/pigeomail:${PIGEOMAIL_VERSION}"
+    build:
+      dockerfile: build/package/Dockerfile
+      context: ../.
     depends_on:
       rabbitmq:
         condition: service_healthy

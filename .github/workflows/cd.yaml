@@ -1,4 +1,4 @@
-name: Release and deploy
+name: Build docker image and publish release
 
 on:
   push:
@@ -61,20 +61,3 @@ jobs:
         with:
           draft: false
           prerelease: false
-
-  deploy:
-    needs: build-and-push-image
-    name: Deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          port: ${{ secrets.PORT }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: |
-            cd ${{ secrets.APP_DIR }}
-            git pull
-            bash .deploy/deploy.sh "${{ github.ref_name }}"
