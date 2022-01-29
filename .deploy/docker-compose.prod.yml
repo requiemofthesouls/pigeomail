@@ -25,7 +25,7 @@ services:
       - -c
       - config.yaml
     networks:
-      - app-tier
+      - pigeomail_backend
 
   receiver:
     image: "ghcr.io/requiemofthesouls/pigeomail:${PIGEOMAIL_VERSION}"
@@ -46,5 +46,5 @@ services:
       - -c
       - config.yaml
     networks:
-      - app-tier
+      - pigeomail_backend
     restart: always

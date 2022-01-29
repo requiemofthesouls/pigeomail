@@ -17,7 +17,7 @@ services:
     volumes:
       - 'rabbitmq_data:/var/lib/rabbitmq/mnesia'
     networks:
-      - app-tier
+      - pigeomail_backend
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 5s
@@ -35,7 +35,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
     networks:
-      - app-tier
+      - pigeomail_backend
     healthcheck:
       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 5s
@@ -50,5 +50,8 @@ volumes:
 
 
 networks:
-  app-tier:
+  pigeomail_backend:
     driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+      com.docker.network.bridge.name: "pigeomail_backend"
