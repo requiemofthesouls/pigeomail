@@ -1,7 +1,7 @@
 smtp:
   server:
     addr: ":21025"
-    domain: "shieldemail.ddns.net"
+    domain: "example.com"
     read_timeout_seconds: 10
     write_timeout_seconds: 10
     max_message_bytes: 1024
@@ -13,7 +13,7 @@ smtp:
 telegram:
   token: "your_Bot_token"
   debug: true
-  webhook_mode:
+  webhook:
     enabled: false
     port: 8443
     cert: ".deploy/cert.pem"

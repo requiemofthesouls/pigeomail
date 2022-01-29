@@ -3,7 +3,7 @@ package telegram
 type Config struct {
 	Debug   bool    `yaml:"debug"`
 	Token   string  `yaml:"token"`
-	Webhook Webhook `yaml:"webhook_mode"`
+	Webhook Webhook `yaml:"webhook"`
 }
 
 type Webhook struct {

@@ -38,20 +38,23 @@ func getWebhookUpdatesChan(
 		tgbotapi.FilePath(cfg.Webhook.Cert),
 	)
 	if err != nil {
+		log.Error(err, "fail to initialize tgbotapi.NewWebhookWithCert")
 		return nil, err
 	}
 
 	if _, err = tgAPI.Request(whCfg); err != nil {
+		log.Error(err, "fail set webhook")
 		return nil, err
 	}
 
 	var info tgbotapi.WebhookInfo
 	if info, err = tgAPI.GetWebhookInfo(); err != nil {
+		log.Error(err, "fail GetWebhookInfo")
 		return nil, err
 	}
 
 	if info.LastErrorDate != 0 {
-		log.Info("telegram callback failed", "last_error", info.LastErrorMessage)
+		log.Info("GetWebhookInfo", "last_error", info.LastErrorMessage)
 	}
 
 	updates = tgAPI.ListenForWebhook("/" + tgAPI.Token)
@@ -74,16 +77,6 @@ func getWebhookUpdatesChan(
 func getUpdatesChan(log logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.UpdatesChannel, err error) {
 	log.Info("starting tg_bot without webhook mode")
 
-	// delete created webhook cause
-	// bot won't start in that mode if webhook was created before
-	deleteWHCfg := tgbotapi.DeleteWebhookConfig{
-		DropPendingUpdates: false,
-	}
-
-	if _, err = tgAPI.Request(deleteWHCfg); err != nil {
-		return nil, err
-	}
-
 	updateCfg := tgbotapi.NewUpdate(0)
 	updateCfg.Timeout = 60
 
@@ -102,10 +95,20 @@ func NewTGBot(
 	if tgAPI, err = tgbotapi.NewBotAPI(cfg.Token); err != nil {
 		return nil, err
 	}
-
 	tgAPI.Debug = cfg.Debug
-
 	log.Info("authorized", "account", tgAPI.Self.UserName)
+
+	log.Info("removing previous webhook")
+	// delete created webhook cause
+	// bot won't start in that mode if webhook was created before
+	deleteWHCfg := tgbotapi.DeleteWebhookConfig{
+		DropPendingUpdates: false,
+	}
+
+	if _, err = tgAPI.Request(deleteWHCfg); err != nil {
+		log.Error(err, "fail remove webhook")
+		return nil, err
+	}
 
 	var updates tgbotapi.UpdatesChannel
 	switch cfg.Webhook.Enabled {
