@@ -21,7 +21,7 @@ import (
 type Session struct {
 	publisher rabbitmq.IRMQEmailPublisher
 	repo      repository.IEmailRepository
-	logger    logr.Logger
+	logger    *logr.Logger
 }
 
 var ErrMailNotDelivered = errors.New("mail not delivered")

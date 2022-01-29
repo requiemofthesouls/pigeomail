@@ -9,7 +9,7 @@ type IRMQEmailConsumer interface {
 	ConsumeIncomingEmail(handler func(msg *amqp.Delivery))
 }
 
-func NewRMQEmailConsumer(config *Config, log logr.Logger) (IRMQEmailConsumer, error) {
+func NewRMQEmailConsumer(config *Config, log *logr.Logger) (IRMQEmailConsumer, error) {
 	conn, err := NewRMQConnection(config.DSN)
 	if err != nil {
 		return nil, err

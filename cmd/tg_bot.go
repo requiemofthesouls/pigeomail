@@ -18,7 +18,7 @@ var tgBotCmd = &cobra.Command{
 	Short: "Telegram bot which handles user input",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var log = logger.New()
+		var log = logger.GetLogger()
 
 		var tgCfg *telegram.Config
 		if err = viper.UnmarshalKey("telegram", &tgCfg); err != nil {
@@ -34,7 +34,14 @@ var tgBotCmd = &cobra.Command{
 		}
 
 		var repo repository.IEmailRepository
-		if repo, err = repository.NewMongoRepository(dbCfg); err != nil {
+		if repo, err = repository.NewMongoRepository(
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+		); err != nil {
 			return err
 		}
 

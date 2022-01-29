@@ -21,15 +21,10 @@ type Bot struct {
 	repo     repository.IEmailRepository
 	consumer rabbitmq.IRMQEmailConsumer
 	domain   string
-	logger   logr.Logger
+	logger   *logr.Logger
 }
 
-func getWebhookUpdatesChan(
-	log logr.Logger,
-	domain string,
-	tgAPI *tgbotapi.BotAPI,
-	cfg *Config,
-) (updates tgbotapi.UpdatesChannel, err error) {
+func getWebhookUpdatesChan(log *logr.Logger, domain string, tgAPI *tgbotapi.BotAPI, cfg *Config) (updates tgbotapi.UpdatesChannel, err error) {
 	log.Info("starting tg_bot in webhook mode", "port", cfg.Webhook.Port)
 
 	var whCfg tgbotapi.WebhookConfig
@@ -74,7 +69,7 @@ func getWebhookUpdatesChan(
 	return updates, nil
 }
 
-func getUpdatesChan(log logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.UpdatesChannel) {
+func getUpdatesChan(log *logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.UpdatesChannel) {
 	log.Info("starting tg_bot without webhook mode")
 
 	updateCfg := tgbotapi.NewUpdate(0)
@@ -84,13 +79,7 @@ func getUpdatesChan(log logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.U
 	return updates
 }
 
-func NewTGBot(
-	cfg *Config,
-	rmqCfg *rabbitmq.Config,
-	repo repository.IEmailRepository,
-	domain string,
-	log logr.Logger,
-) (bot *Bot, err error) {
+func NewTGBot(cfg *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailRepository, domain string, log *logr.Logger) (bot *Bot, err error) {
 	var tgAPI *tgbotapi.BotAPI
 	if tgAPI, err = tgbotapi.NewBotAPI(cfg.Token); err != nil {
 		return nil, err

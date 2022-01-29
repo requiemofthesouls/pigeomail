@@ -3,38 +3,32 @@ package receiver
 import (
 	"time"
 
-	"pigeomail/internal/repository"
-	"pigeomail/rabbitmq"
-
 	"github.com/emersion/go-smtp"
 	"github.com/go-logr/logr"
+	"pigeomail/logger"
 )
 
 type Receiver struct {
 	server *smtp.Server
-	logger logr.Logger
+	logger *logr.Logger
 }
 
-func NewSMTPReceiver(rmqCfg *rabbitmq.Config, cfg *Config, repo repository.IEmailRepository, log logr.Logger) (r *Receiver, err error) {
-	var publisher rabbitmq.IRMQEmailPublisher
-	if publisher, err = rabbitmq.NewRMQEmailPublisher(rmqCfg); err != nil {
-		return nil, err
-	}
+func NewSMTPReceiver(
+	backend smtp.Backend,
+	addr, domain string,
+	readTimeout, writeTimeout, maxMessageBytes, maxRecipients int,
+	allowInsecureAuth bool,
+) (r *Receiver, err error) {
+	var log = logger.GetLogger()
 
-	var b smtp.Backend
-	if b, err = NewBackend(publisher, repo, log); err != nil {
-		return nil, err
-	}
-
-	server := smtp.NewServer(b)
-
-	server.Addr = cfg.Addr
-	server.Domain = cfg.Domain
-	server.ReadTimeout = time.Duration(cfg.ReadTimeout) * time.Second
-	server.WriteTimeout = time.Duration(cfg.WriteTimeout) * time.Second
-	server.MaxMessageBytes = cfg.MaxMessageBytes * 1024
-	server.MaxRecipients = cfg.MaxRecipients
-	server.AllowInsecureAuth = cfg.AllowInsecureAuth
+	server := smtp.NewServer(backend)
+	server.Addr = addr
+	server.Domain = domain
+	server.ReadTimeout = time.Duration(readTimeout) * time.Second
+	server.WriteTimeout = time.Duration(writeTimeout) * time.Second
+	server.MaxMessageBytes = maxMessageBytes * 1024
+	server.MaxRecipients = maxRecipients
+	server.AllowInsecureAuth = allowInsecureAuth
 
 	return &Receiver{server: server, logger: log}, nil
 }

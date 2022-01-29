@@ -23,8 +23,8 @@ type IRMQEmailPublisher interface {
 	PublishIncomingEmail(msg *ParsedEmail) error
 }
 
-func NewRMQEmailPublisher(config *Config) (IRMQEmailPublisher, error) {
-	conn, err := NewRMQConnection(config.DSN)
+func NewRMQEmailPublisher(DSN string) (IRMQEmailPublisher, error) {
+	conn, err := NewRMQConnection(DSN)
 	if err != nil {
 		return nil, err
 	}

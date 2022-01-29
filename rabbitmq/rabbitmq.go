@@ -11,7 +11,7 @@ type Config struct {
 
 type client struct {
 	ch     *amqp.Channel
-	logger logr.Logger
+	logger *logr.Logger
 }
 
 func NewRMQConnection(dsn string) (*amqp.Connection, error) {

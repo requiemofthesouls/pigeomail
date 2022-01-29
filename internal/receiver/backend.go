@@ -2,21 +2,29 @@ package receiver
 
 import (
 	"pigeomail/internal/repository"
+	"pigeomail/logger"
 	"pigeomail/rabbitmq"
 
 	"github.com/emersion/go-smtp"
 	"github.com/go-logr/logr"
 )
 
-func NewBackend(p rabbitmq.IRMQEmailPublisher, r repository.IEmailRepository, log logr.Logger) (b smtp.Backend, err error) {
-	return &backend{publisher: p, repo: r, logger: log}, nil
+func NewBackend(
+	repo repository.IEmailRepository,
+	publisher rabbitmq.IRMQEmailPublisher,
+) (b smtp.Backend, err error) {
+	return &backend{
+		publisher: publisher,
+		repo:      repo,
+		logger:    logger.GetLogger(),
+	}, nil
 }
 
 // The Backend implements SMTP server methods.
 type backend struct {
 	publisher rabbitmq.IRMQEmailPublisher
 	repo      repository.IEmailRepository
-	logger    logr.Logger
+	logger    *logr.Logger
 }
 
 func (b *backend) NewSession(state *smtp.ConnectionState, hostname string) (smtp.Session, error) {

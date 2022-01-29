@@ -4,18 +4,19 @@ import (
 	"context"
 
 	"pigeomail/database"
+	"pigeomail/pkg/client/mongodb"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type mongoRepo struct {
-	client *mongo.Client
+	client *mongo.Database
 }
 
 func (m *mongoRepo) GetChatIDByEmail(ctx context.Context, email string) (_ int64, err error) {
 	var result EMail
-	var collection = m.client.Database("pigeomail").Collection("email")
+	var collection = m.client.Collection("email")
 	if err = collection.FindOne(ctx, bson.M{"name": email}).Decode(&result); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return 0, database.ErrNotFound
@@ -27,9 +28,19 @@ func (m *mongoRepo) GetChatIDByEmail(ctx context.Context, email string) (_ int64
 	return result.ChatID, nil
 }
 
-func NewMongoRepository(cfg *database.Config) (_ IEmailRepository, err error) {
-	var client *mongo.Client
-	if client, err = database.NewMongoDBClient(cfg); err != nil {
+func NewMongoRepository(host, port, username, password, database, authSource string) (_ IEmailRepository, err error) {
+	var ctx = context.Background()
+
+	var client *mongo.Database
+	if client, err = mongodb.NewClient(
+		ctx,
+		host,
+		port,
+		username,
+		password,
+		database,
+		authSource,
+	); err != nil {
 		return nil, err
 	}
 
@@ -37,7 +48,7 @@ func NewMongoRepository(cfg *database.Config) (_ IEmailRepository, err error) {
 }
 
 func (m *mongoRepo) GetEmailByChatID(ctx context.Context, chatID int64) (email EMail, err error) {
-	collection := m.client.Database("pigeomail").Collection("email")
+	collection := m.client.Collection("email")
 	if err = collection.FindOne(ctx, bson.M{"chat_id": chatID}).Decode(&email); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return email, database.ErrNotFound
@@ -50,7 +61,7 @@ func (m *mongoRepo) GetEmailByChatID(ctx context.Context, chatID int64) (email E
 }
 
 func (m *mongoRepo) GetEmailByName(ctx context.Context, name string) (email EMail, err error) {
-	collection := m.client.Database("pigeomail").Collection("email")
+	collection := m.client.Collection("email")
 	if err = collection.FindOne(ctx, bson.M{"name": name}).Decode(&email); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return email, database.ErrNotFound
@@ -63,7 +74,7 @@ func (m *mongoRepo) GetEmailByName(ctx context.Context, name string) (email EMai
 }
 
 func (m *mongoRepo) CreateEmail(ctx context.Context, email EMail) (err error) {
-	collection := m.client.Database("pigeomail").Collection("email")
+	collection := m.client.Collection("email")
 	if _, err = collection.InsertOne(ctx, email); err != nil {
 		return err
 	}
@@ -72,7 +83,7 @@ func (m *mongoRepo) CreateEmail(ctx context.Context, email EMail) (err error) {
 }
 
 func (m *mongoRepo) DeleteEmail(ctx context.Context, chatID int64) (err error) {
-	collection := m.client.Database("pigeomail").Collection("email")
+	collection := m.client.Collection("email")
 	if _, err = collection.DeleteOne(ctx,
 		bson.M{"chat_id": chatID},
 	); err != nil {
@@ -83,7 +94,7 @@ func (m *mongoRepo) DeleteEmail(ctx context.Context, chatID int64) (err error) {
 }
 
 func (m *mongoRepo) GetUserState(ctx context.Context, chatID int64) (state UserState, err error) {
-	collection := m.client.Database("pigeomail").Collection("state")
+	collection := m.client.Collection("state")
 	if err = collection.FindOne(ctx, bson.M{"chat_id": chatID}).Decode(&state); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return state, database.ErrNotFound
@@ -96,7 +107,7 @@ func (m *mongoRepo) GetUserState(ctx context.Context, chatID int64) (state UserS
 }
 
 func (m *mongoRepo) CreateUserState(ctx context.Context, state UserState) (err error) {
-	var collection = m.client.Database("pigeomail").Collection("state")
+	var collection = m.client.Collection("state")
 
 	var oldState UserState
 	if oldState, err = m.GetUserState(ctx, state.ChatID); err != nil {
@@ -127,7 +138,7 @@ func (m *mongoRepo) CreateUserState(ctx context.Context, state UserState) (err e
 }
 
 func (m *mongoRepo) DeleteUserState(ctx context.Context, state UserState) (err error) {
-	collection := m.client.Database("pigeomail").Collection("state")
+	collection := m.client.Collection("state")
 	if _, err = collection.DeleteMany(ctx,
 		bson.M{
 			"chat_id": state.ChatID,
