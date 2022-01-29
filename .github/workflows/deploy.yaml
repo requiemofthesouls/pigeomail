@@ -17,5 +17,6 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             cd ${{ secrets.APP_DIR }}
+            git stash
             git pull
             bash .deploy/deploy.sh "${{ github.event.release.tag_name }}"
