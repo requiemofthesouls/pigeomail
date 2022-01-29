@@ -2,7 +2,6 @@ name: 'Deploy release'
 on:
   release:
     types: [ published ]
-  workflow_dispatch:
 jobs:
   deploy:
     name: Deploy
