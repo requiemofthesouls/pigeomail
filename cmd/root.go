@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -56,9 +57,15 @@ func initConfig() {
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
+	viper.SetEnvPrefix("ENV")
+	viper.SetEnvKeyReplacer(
+		strings.NewReplacer(".", "_"),
+	)
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err != nil {
+		cobra.CheckErr(err)
 	}
+
+	fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 }

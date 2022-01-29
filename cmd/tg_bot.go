@@ -22,6 +22,9 @@ var tgBotCmd = &cobra.Command{
 		if err = viper.UnmarshalKey("telegram", &tgCfg); err != nil {
 			return err
 		}
+		if err = viper.UnmarshalKey("telegram.webhook_mode", &tgCfg.Webhook); err != nil {
+			return err
+		}
 
 		var dbCfg *database.Config
 		if err = viper.UnmarshalKey("database", &dbCfg); err != nil {

@@ -1,6 +1,8 @@
 # run local build
 # docker-compose up
 
+# build certs for bot
+# openssl req -newkey rsa:2048 -sha256 -nodes -keyout cert.key -x509 -days 365 -out cert.pem -subj "/C=US/ST=New York/L=Brooklyn/O=Example Brooklyn Company/CN=YOURDOMAIN.EXAMPLE"
 version: "3"
 
 services:
@@ -39,46 +41,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  tg_bot:
-    build:
-      dockerfile: build/package/Dockerfile
-      context: ../.
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
-    restart: always
-    volumes:
-      - './config.docker.yaml:/config.yaml'
-    command:
-      - tg_bot
-      - -c
-      - config.yaml
-    networks:
-      - app-tier
-
-  receiver:
-    build:
-      dockerfile: build/package/Dockerfile
-      context: ../.
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
-    volumes:
-      - './config.docker.yaml:/config.yaml'
-    ports:
-      - '25:21025'
-    command:
-      - receiver
-      - -c
-      - config.yaml
-    networks:
-      - app-tier
-    restart: always
 
 volumes:
   rabbitmq_data:

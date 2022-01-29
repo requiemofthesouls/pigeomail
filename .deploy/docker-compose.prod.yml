@@ -5,6 +5,46 @@ version: "3"
 services:
   tg_bot:
     image: "ghcr.io/requiemofthesouls/pigeomail:${PIGEOMAIL_VERSION}"
+    build:
+      dockerfile: build/package/Dockerfile
+      context: ../.
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    ports:
+      - '8433:8433'
+    restart: always
+    volumes:
+      - './config.docker.yaml:/config.yaml'
+      - './cert.pem:/cert.pem'
+      - './key.pem'
+    command:
+      - tg_bot
+      - -c
+      - config.yaml
+    networks:
+      - app-tier
 
   receiver:
     image: "ghcr.io/requiemofthesouls/pigeomail:${PIGEOMAIL_VERSION}"
+    build:
+      dockerfile: build/package/Dockerfile
+      context: ../.
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    volumes:
+      - './config.docker.yaml:/config.yaml'
+    ports:
+      - '25:21025'
+    command:
+      - receiver
+      - -c
+      - config.yaml
+    networks:
+      - app-tier
+    restart: always

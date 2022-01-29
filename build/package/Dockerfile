@@ -18,6 +18,7 @@ FROM gcr.io/distroless/base-debian11
 WORKDIR /
 COPY --from=build /app/build/ci/pigeomail /pigeomail
 EXPOSE 21025
+EXPOSE 8443
 USER nonroot:nonroot
 
 ENTRYPOINT ["./pigeomail"]

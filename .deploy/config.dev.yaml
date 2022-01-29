@@ -12,7 +12,12 @@ smtp:
 
 telegram:
   token: "your_Bot_token"
-  debug: false
+  debug: true
+  webhook_mode:
+    enabled: false
+    port: 8443
+    cert: ".deploy/cert.pem"
+    key: ".deploy/cert.key"
 
 rabbitmq:
   dsn: "amqp://guest:guest@rabbitmq:5672/"
