@@ -19,7 +19,7 @@ services:
     volumes:
       - './config.docker.yaml:/config.yaml'
       - './cert.pem:/cert.pem'
-      - './key.pem:/key.pem'
+      - './cert.key:/cert.key'
     command:
       - tg_bot
       - -c
