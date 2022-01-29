@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 	"html"
+	"net/http"
 	"time"
+
+	"pigeomail/internal/repository"
+	"pigeomail/rabbitmq"
 
 	"github.com/go-logr/logr"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/streadway/amqp"
-	"pigeomail/internal/repository"
-	"pigeomail/rabbitmq"
 )
 
 type Bot struct {
@@ -22,26 +24,103 @@ type Bot struct {
 	logger   logr.Logger
 }
 
+func getWebhookUpdatesChan(
+	log logr.Logger,
+	domain string,
+	tgAPI *tgbotapi.BotAPI,
+	cfg *Config,
+) (updates tgbotapi.UpdatesChannel, err error) {
+	log.Info("starting tg_bot in webhook mode", "port", cfg.Webhook.Port)
+
+	var whCfg tgbotapi.WebhookConfig
+	whCfg, err = tgbotapi.NewWebhookWithCert(
+		fmt.Sprintf("https://%s:%d/%s", domain, cfg.Webhook.Port, tgAPI.Token),
+		tgbotapi.FilePath(cfg.Webhook.Cert),
+	)
+	if err != nil {
+		log.Error(err, "fail to initialize tgbotapi.NewWebhookWithCert")
+		return nil, err
+	}
+
+	if _, err = tgAPI.Request(whCfg); err != nil {
+		log.Error(err, "fail set webhook")
+		return nil, err
+	}
+
+	var info tgbotapi.WebhookInfo
+	if info, err = tgAPI.GetWebhookInfo(); err != nil {
+		log.Error(err, "fail GetWebhookInfo")
+		return nil, err
+	}
+
+	if info.LastErrorDate != 0 {
+		log.Info("GetWebhookInfo", "last_error", info.LastErrorMessage)
+	}
+
+	updates = tgAPI.ListenForWebhook("/" + tgAPI.Token)
+
+	go func() {
+		err = http.ListenAndServeTLS(
+			fmt.Sprintf("0.0.0.0:%d", cfg.Webhook.Port),
+			cfg.Webhook.Cert,
+			cfg.Webhook.Key,
+			nil,
+		)
+		if err != nil {
+			log.Error(err, "error in http.ListenAndServeTLS")
+		}
+	}()
+
+	return updates, nil
+}
+
+func getUpdatesChan(log logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.UpdatesChannel) {
+	log.Info("starting tg_bot without webhook mode")
+
+	updateCfg := tgbotapi.NewUpdate(0)
+	updateCfg.Timeout = 60
+
+	updates = tgAPI.GetUpdatesChan(updateCfg)
+	return updates
+}
+
 func NewTGBot(
-	config *Config,
+	cfg *Config,
 	rmqCfg *rabbitmq.Config,
 	repo repository.IEmailRepository,
 	domain string,
 	log logr.Logger,
-) (*Bot, error) {
-	bot, err := tgbotapi.NewBotAPI(config.Token)
-	if err != nil {
+) (bot *Bot, err error) {
+	var tgAPI *tgbotapi.BotAPI
+	if tgAPI, err = tgbotapi.NewBotAPI(cfg.Token); err != nil {
+		return nil, err
+	}
+	tgAPI.Debug = cfg.Debug
+	log.Info("authorized", "account", tgAPI.Self.UserName)
+
+	log.Info("removing previous webhook")
+	// delete created webhook cause
+	// bot won't start in that mode if webhook was created before
+	deleteWHCfg := tgbotapi.DeleteWebhookConfig{
+		DropPendingUpdates: false,
+	}
+
+	if _, err = tgAPI.Request(deleteWHCfg); err != nil {
+		log.Error(err, "fail remove webhook")
 		return nil, err
 	}
 
-	bot.Debug = config.Debug
-
-	log.Info("authorized", "account", bot.Self.UserName)
-
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates := bot.GetUpdatesChan(u)
+	var updates tgbotapi.UpdatesChannel
+	switch cfg.Webhook.Enabled {
+	case true:
+		updates, err = getWebhookUpdatesChan(log, domain, tgAPI, cfg)
+	case false:
+		updates = getUpdatesChan(log, tgAPI)
+	}
+	// check get updates chan err
+	if err != nil {
+		return nil, err
+	}
 
 	var consumer rabbitmq.IRMQEmailConsumer
 	if consumer, err = rabbitmq.NewRMQEmailConsumer(rmqCfg, log); err != nil {
@@ -49,7 +128,7 @@ func NewTGBot(
 	}
 
 	return &Bot{
-		api:      bot,
+		api:      tgAPI,
 		updates:  updates,
 		repo:     repo,
 		consumer: consumer,
@@ -75,26 +154,25 @@ func (b *Bot) handleCommand(update *tgbotapi.Update) {
 			b.logger.Error(err, "error send message")
 		}
 	}
-
 }
 
-func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
+func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 	from, ok := msg.Headers["from"]
 	if !ok {
 		b.logger.Error(nil, "error to extract 'from' header from message")
-		msg.Reject(false)
+		_ = msg.Reject(false)
 	}
 
 	to, ok := msg.Headers["to"]
 	if !ok {
 		b.logger.Error(nil, "error to extract 'to' header from message")
-		msg.Reject(false)
+		_ = msg.Reject(false)
 	}
 
 	subject, ok := msg.Headers["subject"]
 	if !ok {
 		b.logger.Error(nil, "error to extract 'subject' header from message")
-		msg.Reject(false)
+		_ = msg.Reject(false)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -103,7 +181,7 @@ func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
 	chatID, err := b.repo.GetChatIDByEmail(ctx, to.(string))
 	if err != nil {
 		b.logger.Error(err, "chatID not found", "email", to)
-		msg.Reject(false)
+		_ = msg.Reject(false)
 	}
 
 	textTemplate := `
@@ -124,11 +202,10 @@ func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
 		)
 
 		tgMsg := tgbotapi.NewMessage(chatID, text)
-		tgMsg.ParseMode = "html"
+		tgMsg.ParseMode = tgbotapi.ModeHTML
 
 		if _, err = b.api.Send(tgMsg); err != nil {
 			b.logger.Error(err, "error send message")
-
 		}
 
 		for i := 3000; i < len(msg.Body); i += 4096 {
@@ -138,14 +215,14 @@ func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
 			}
 
 			tgMsg = tgbotapi.NewMessage(chatID, html.EscapeString(string(msg.Body[i:y])))
-			tgMsg.ParseMode = "html"
+			tgMsg.ParseMode = tgbotapi.ModeHTML
 
 			if _, err = b.api.Send(tgMsg); err != nil {
 				b.logger.Error(err, "error send message")
 			}
 		}
 
-		msg.Ack(false)
+		_ = msg.Ack(false)
 		return
 	}
 
@@ -158,14 +235,13 @@ func (b *Bot) incomingEmailConsumer(msg amqp.Delivery) {
 	)
 
 	tgMsg := tgbotapi.NewMessage(chatID, text)
-	tgMsg.ParseMode = "html"
+	tgMsg.ParseMode = tgbotapi.ModeHTML
 
 	if _, err = b.api.Send(tgMsg); err != nil {
 		b.logger.Error(err, "error send message")
-
 	}
 
-	msg.Ack(false)
+	_ = msg.Ack(false)
 }
 
 func (b *Bot) runConsumer() {
@@ -176,6 +252,7 @@ func (b *Bot) Run() {
 	go b.runConsumer()
 
 	for update := range b.updates {
+		update := update
 		if !validateIncomingMessage(update.Message) {
 			continue
 		}

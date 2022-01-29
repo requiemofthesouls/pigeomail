@@ -5,9 +5,5 @@ import (
 )
 
 func validateIncomingMessage(msg *tgbotapi.Message) bool {
-	if msg == nil { // ignore any non-Message updates
-		return false
-	}
-
-	return true
+	return msg != nil
 }

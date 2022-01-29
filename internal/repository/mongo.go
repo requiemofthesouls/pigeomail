@@ -3,9 +3,10 @@ package repository
 import (
 	"context"
 
+	"pigeomail/database"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"pigeomail/database"
 )
 
 type mongoRepo struct {
@@ -15,7 +16,7 @@ type mongoRepo struct {
 func (m *mongoRepo) GetChatIDByEmail(ctx context.Context, email string) (_ int64, err error) {
 	var result EMail
 	var collection = m.client.Database("pigeomail").Collection("email")
-	if err = collection.FindOne(ctx, bson.D{{"name", email}}).Decode(&result); err != nil {
+	if err = collection.FindOne(ctx, bson.M{"name": email}).Decode(&result); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return 0, database.ErrNotFound
 		}
@@ -37,7 +38,7 @@ func NewMongoRepository(cfg *database.Config) (_ IEmailRepository, err error) {
 
 func (m *mongoRepo) GetEmailByChatID(ctx context.Context, chatID int64) (email EMail, err error) {
 	collection := m.client.Database("pigeomail").Collection("email")
-	if err = collection.FindOne(ctx, bson.D{{"chat_id", chatID}}).Decode(&email); err != nil {
+	if err = collection.FindOne(ctx, bson.M{"chat_id": chatID}).Decode(&email); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return email, database.ErrNotFound
 		}
@@ -50,7 +51,7 @@ func (m *mongoRepo) GetEmailByChatID(ctx context.Context, chatID int64) (email E
 
 func (m *mongoRepo) GetEmailByName(ctx context.Context, name string) (email EMail, err error) {
 	collection := m.client.Database("pigeomail").Collection("email")
-	if err = collection.FindOne(ctx, bson.D{{"name", name}}).Decode(&email); err != nil {
+	if err = collection.FindOne(ctx, bson.M{"name": name}).Decode(&email); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return email, database.ErrNotFound
 		}
@@ -114,9 +115,10 @@ func (m *mongoRepo) CreateUserState(ctx context.Context, state UserState) (err e
 		return nil
 	}
 
-	if _, err = collection.UpdateOne(ctx, bson.D{
-		{"_id", oldState.ID},
-	}, bson.D{{"$set", bson.D{{"state", state.State}}}},
+	if _, err = collection.UpdateOne(
+		ctx,
+		bson.M{"_id": oldState.ID},
+		bson.M{"$set": bson.M{"state": state.State}},
 	); err != nil {
 		return err
 	}

@@ -1,10 +1,11 @@
-package smtp_server
+package receiver
 
 import (
-	"github.com/emersion/go-smtp"
-	"github.com/go-logr/logr"
 	"pigeomail/internal/repository"
 	"pigeomail/rabbitmq"
+
+	"github.com/emersion/go-smtp"
+	"github.com/go-logr/logr"
 )
 
 func NewBackend(p rabbitmq.IRMQEmailPublisher, r repository.IEmailRepository, log logr.Logger) (b smtp.Backend, err error) {

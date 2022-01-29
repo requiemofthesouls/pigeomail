@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"pigeomail/database"
+	"pigeomail/internal/receiver"
 	"pigeomail/internal/repository"
-	"pigeomail/internal/smtp_server"
 	"pigeomail/internal/telegram"
 	"pigeomail/logger"
 	"pigeomail/rabbitmq"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // tgBotCmd represents the tgBot command
@@ -17,8 +18,13 @@ var tgBotCmd = &cobra.Command{
 	Short: "Telegram bot which handles user input",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var log = logger.New()
+
 		var tgCfg *telegram.Config
 		if err = viper.UnmarshalKey("telegram", &tgCfg); err != nil {
+			return err
+		}
+		if err = viper.UnmarshalKey("telegram.webhook", &tgCfg.Webhook); err != nil {
 			return err
 		}
 
@@ -37,12 +43,10 @@ var tgBotCmd = &cobra.Command{
 			return err
 		}
 
-		var smtpCfg *smtp_server.Config
+		var smtpCfg *receiver.Config
 		if err = viper.UnmarshalKey("smtp.server", &smtpCfg); err != nil {
 			return err
 		}
-
-		var log = logger.New()
 
 		var bot *telegram.Bot
 		if bot, err = telegram.NewTGBot(

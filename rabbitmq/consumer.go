@@ -6,7 +6,7 @@ import (
 )
 
 type IRMQEmailConsumer interface {
-	ConsumeIncomingEmail(handler func(msg amqp.Delivery))
+	ConsumeIncomingEmail(handler func(msg *amqp.Delivery))
 }
 
 func NewRMQEmailConsumer(config *Config, log logr.Logger) (IRMQEmailConsumer, error) {
@@ -29,7 +29,7 @@ func NewRMQEmailConsumer(config *Config, log logr.Logger) (IRMQEmailConsumer, er
 	return r, nil
 }
 
-func (r *client) ConsumeIncomingEmail(handler func(msg amqp.Delivery)) {
+func (r *client) ConsumeIncomingEmail(handler func(msg *amqp.Delivery)) {
 	r.logger.Info("Starting RMQ consumer...")
 
 	msgs, err := r.ch.Consume(
@@ -50,6 +50,8 @@ func (r *client) ConsumeIncomingEmail(handler func(msg amqp.Delivery)) {
 
 	go func() {
 		for d := range msgs {
+			d := d
+
 			r.logger.V(10).Info(
 				"RMQ Start message processing",
 				"queue",
@@ -58,7 +60,7 @@ func (r *client) ConsumeIncomingEmail(handler func(msg amqp.Delivery)) {
 				d.MessageId,
 			)
 
-			handler(d)
+			handler(&d)
 
 			r.logger.V(10).Info(
 				"RMQ End message processing",

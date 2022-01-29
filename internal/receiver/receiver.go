@@ -1,12 +1,13 @@
-package smtp_server
+package receiver
 
 import (
 	"time"
 
-	"github.com/emersion/go-smtp"
-	"github.com/go-logr/logr"
 	"pigeomail/internal/repository"
 	"pigeomail/rabbitmq"
+
+	"github.com/emersion/go-smtp"
+	"github.com/go-logr/logr"
 )
 
 type Receiver struct {

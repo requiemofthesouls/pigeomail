@@ -5,8 +5,9 @@ import (
 	"log"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"pigeomail/internal/repository"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func (b *Bot) handleUserInput(update *tgbotapi.Update) {
@@ -27,5 +28,4 @@ func (b *Bot) handleUserInput(update *tgbotapi.Update) {
 	case repository.StateDeleteEmailStep1:
 		b.handleDeleteCommandStep2(update)
 	}
-
 }
