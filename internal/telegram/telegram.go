@@ -74,14 +74,14 @@ func getWebhookUpdatesChan(
 	return updates, nil
 }
 
-func getUpdatesChan(log logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.UpdatesChannel, err error) {
+func getUpdatesChan(log logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.UpdatesChannel) {
 	log.Info("starting tg_bot without webhook mode")
 
 	updateCfg := tgbotapi.NewUpdate(0)
 	updateCfg.Timeout = 60
 
 	updates = tgAPI.GetUpdatesChan(updateCfg)
-	return updates, nil
+	return updates
 }
 
 func NewTGBot(
@@ -115,7 +115,7 @@ func NewTGBot(
 	case true:
 		updates, err = getWebhookUpdatesChan(log, domain, tgAPI, cfg)
 	case false:
-		updates, err = getUpdatesChan(log, tgAPI)
+		updates = getUpdatesChan(log, tgAPI)
 	}
 	// check get updates chan err
 	if err != nil {
