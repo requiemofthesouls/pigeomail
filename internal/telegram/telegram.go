@@ -24,6 +24,73 @@ type Bot struct {
 	logger   logr.Logger
 }
 
+func getWebhookUpdatesChan(
+	log logr.Logger,
+	domain string,
+	tgAPI *tgbotapi.BotAPI,
+	cfg *Config,
+) (updates tgbotapi.UpdatesChannel, err error) {
+	log.Info("starting tg_bot in webhook mode", "port", cfg.Webhook.Port)
+
+	var whCfg tgbotapi.WebhookConfig
+	whCfg, err = tgbotapi.NewWebhookWithCert(
+		fmt.Sprintf("https://%s:%d/%s", domain, cfg.Webhook.Port, tgAPI.Token),
+		tgbotapi.FilePath(cfg.Webhook.Cert),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err = tgAPI.Request(whCfg); err != nil {
+		return nil, err
+	}
+
+	var info tgbotapi.WebhookInfo
+	if info, err = tgAPI.GetWebhookInfo(); err != nil {
+		return nil, err
+	}
+
+	if info.LastErrorDate != 0 {
+		log.Info("telegram callback failed", "last_error", info.LastErrorMessage)
+	}
+
+	updates = tgAPI.ListenForWebhook("/" + tgAPI.Token)
+
+	go func() {
+		err = http.ListenAndServeTLS(
+			fmt.Sprintf("0.0.0.0:%d", cfg.Webhook.Port),
+			cfg.Webhook.Cert,
+			cfg.Webhook.Key,
+			nil,
+		)
+		if err != nil {
+			log.Error(err, "error in http.ListenAndServeTLS")
+		}
+	}()
+
+	return updates, nil
+}
+
+func getUpdatesChan(log logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.UpdatesChannel, err error) {
+	log.Info("starting tg_bot without webhook mode")
+
+	// delete created webhook cause
+	// bot won't start in that mode if webhook was created before
+	deleteWHCfg := tgbotapi.DeleteWebhookConfig{
+		DropPendingUpdates: false,
+	}
+
+	if _, err = tgAPI.Request(deleteWHCfg); err != nil {
+		return nil, err
+	}
+
+	updateCfg := tgbotapi.NewUpdate(0)
+	updateCfg.Timeout = 60
+
+	updates = tgAPI.GetUpdatesChan(updateCfg)
+	return updates, nil
+}
+
 func NewTGBot(
 	cfg *Config,
 	rmqCfg *rabbitmq.Config,
@@ -41,62 +108,15 @@ func NewTGBot(
 	log.Info("authorized", "account", tgAPI.Self.UserName)
 
 	var updates tgbotapi.UpdatesChannel
-	if cfg.Webhook.Enabled {
-		log.Info("starting tg_bot in webhook mode", "port", cfg.Webhook.Port)
-
-		var whCfg tgbotapi.WebhookConfig
-		whCfg, err = tgbotapi.NewWebhookWithCert(
-			fmt.Sprintf("https://%s:%d/%s", domain, cfg.Webhook.Port, tgAPI.Token),
-			tgbotapi.FilePath(cfg.Webhook.Cert),
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		if _, err = tgAPI.Request(whCfg); err != nil {
-			return nil, err
-		}
-
-		var info tgbotapi.WebhookInfo
-		if info, err = tgAPI.GetWebhookInfo(); err != nil {
-			return nil, err
-		}
-
-		if info.LastErrorDate != 0 {
-			log.Info("telegram callback failed", "last_error", info.LastErrorMessage)
-		}
-
-		updates = tgAPI.ListenForWebhook("/" + tgAPI.Token)
-
-		go func() {
-			err = http.ListenAndServeTLS(
-				fmt.Sprintf("0.0.0.0:%d", cfg.Webhook.Port),
-				cfg.Webhook.Cert,
-				cfg.Webhook.Key,
-				nil,
-			)
-			if err != nil {
-				log.Error(err, "error in http.ListenAndServeTLS")
-			}
-		}()
-
-	} else {
-		log.Info("starting tg_bot without webhook mode")
-
-		// delete created webhook cause
-		// bot won't start in that mode if webhook was created before
-		deleteWHCfg := tgbotapi.DeleteWebhookConfig{
-			DropPendingUpdates: false,
-		}
-
-		if _, err = tgAPI.Request(deleteWHCfg); err != nil {
-			return nil, err
-		}
-
-		updateCfg := tgbotapi.NewUpdate(0)
-		updateCfg.Timeout = 60
-
-		updates = tgAPI.GetUpdatesChan(updateCfg)
+	switch cfg.Webhook.Enabled {
+	case true:
+		updates, err = getWebhookUpdatesChan(log, domain, tgAPI, cfg)
+	case false:
+		updates, err = getUpdatesChan(log, tgAPI)
+	}
+	// check get updates chan err
+	if err != nil {
+		return nil, err
 	}
 
 	var consumer rabbitmq.IRMQEmailConsumer
