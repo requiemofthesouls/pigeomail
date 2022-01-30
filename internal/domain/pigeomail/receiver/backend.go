@@ -28,7 +28,7 @@ type backend struct {
 }
 
 func (b *backend) NewSession(state *smtp.ConnectionState, hostname string) (smtp.Session, error) {
-	return &Session{publisher: b.publisher, repo: b.repo, logger: b.logger}, nil
+	return &session{publisher: b.publisher, repo: b.repo, logger: b.logger}, nil
 }
 
 func (b *backend) Login(state *smtp.ConnectionState, username, password string) (smtp.Session, error) {

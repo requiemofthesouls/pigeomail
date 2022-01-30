@@ -20,14 +20,14 @@ import (
 	customerrors "pigeomail/pkg/errors"
 )
 
-// A Session is returned after EHLO.
-type Session struct {
+// A session is returned after EHLO.
+type session struct {
 	publisher publisher.Publisher
 	repo      pigeomail.Storage
 	logger    *logr.Logger
 }
 
-type ParsedEmail struct {
+type email struct {
 	From        string
 	To          string
 	Subject     string
@@ -40,12 +40,12 @@ type ParsedEmail struct {
 
 var ErrMailNotDelivered = errors.New("mail not delivered")
 
-func (s *Session) Mail(from string, opts smtp.MailOptions) error {
+func (s *session) Mail(from string, opts smtp.MailOptions) error {
 	s.logger.V(10).Info("mail from:", "email", from)
 	return nil
 }
 
-func (s *Session) Rcpt(to string) error {
+func (s *session) Rcpt(to string) error {
 	s.logger.V(10).Info("mail to:", "email", to)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -64,7 +64,7 @@ func (s *Session) Rcpt(to string) error {
 	return nil
 }
 
-func (s *Session) parseMail(r io.Reader) (m *ParsedEmail, err error) {
+func (s *session) parseMail(r io.Reader) (m *email, err error) {
 	var e *enmime.Envelope
 	if e, err = enmime.ReadEnvelope(r); err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (s *Session) parseMail(r io.Reader) (m *ParsedEmail, err error) {
 		toAddr = matches[0]
 	}
 
-	m = &ParsedEmail{
+	m = &email{
 		From:        e.GetHeader("From"),
 		To:          toAddr,
 		Subject:     e.GetHeader("Subject"),
@@ -95,23 +95,23 @@ func (s *Session) parseMail(r io.Reader) (m *ParsedEmail, err error) {
 	return m, nil
 }
 
-func (s *Session) Data(r io.Reader) (err error) {
-	var email *ParsedEmail
-	if email, err = s.parseMail(r); err != nil {
-		s.logger.Error(err, "error parse email")
+func (s *session) Data(r io.Reader) (err error) {
+	var parsedEmail *email
+	if parsedEmail, err = s.parseMail(r); err != nil {
+		s.logger.Error(err, "error parse parsedEmail")
 		return ErrMailNotDelivered
 	}
 
 	var msg = &amqp.Publishing{
 		Headers: amqp.Table{
-			"from":    email.From,
-			"to":      email.To,
-			"subject": email.Subject,
-			"date":    email.Date.Unix(),
+			"from":    parsedEmail.From,
+			"to":      parsedEmail.To,
+			"subject": parsedEmail.Subject,
+			"date":    parsedEmail.Date.Unix(),
 		},
 		MessageId:   uuid.New().String(),
-		ContentType: email.ContentType,
-		Body:        []byte(email.Body),
+		ContentType: parsedEmail.ContentType,
+		Body:        []byte(parsedEmail.Body),
 	}
 
 	if err = s.publisher.Publish(rabbitmq.MessageReceivedQueueName, msg); err != nil {
@@ -122,10 +122,10 @@ func (s *Session) Data(r io.Reader) (err error) {
 	return nil
 }
 
-func (s *Session) Reset() {
+func (s *session) Reset() {
 
 }
 
-func (s *Session) Logout() error {
+func (s *session) Logout() error {
 	return nil
 }
