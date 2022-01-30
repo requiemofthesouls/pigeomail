@@ -1,3 +1,4 @@
+[![codecov](https://codecov.io/gh/requiemofthesouls/pigeomail/branch/master/graph/badge.svg)](https://codecov.io/gh/requiemofthesouls/pigeomail)
 # Pigeomail
 
 - Service which provides securely personal email addresses written in pure Go.

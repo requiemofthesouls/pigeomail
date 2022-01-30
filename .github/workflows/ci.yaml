@@ -18,6 +18,17 @@ jobs:
         with:
           version: v1.31
 
+  build:
+    needs: lint
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        if: success()
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+
   test:
     needs: build
     name: Testing
@@ -61,13 +72,4 @@ jobs:
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)
 
-  build:
-    needs: lint
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Go
-        if: success()
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.17.x
+
