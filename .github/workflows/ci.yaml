@@ -18,6 +18,11 @@ jobs:
         with:
           version: v1.31
 
+      - name : ReviewDog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
   build:
     needs: lint
     name: Build
