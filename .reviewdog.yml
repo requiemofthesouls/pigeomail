@@ -5,3 +5,4 @@ runner:
     name: GolangCILint
     reporter: github-pr-review
     fail-on-error: true
+    level: info
