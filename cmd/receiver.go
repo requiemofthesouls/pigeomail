@@ -5,14 +5,16 @@ import (
 
 	"github.com/emersion/go-smtp"
 	"github.com/spf13/cobra"
+	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	storage "pigeomail/internal/adapters/db/pigeomail"
+	"pigeomail/internal/adapters/rabbitmq/publisher"
 	"pigeomail/internal/config"
 	"pigeomail/internal/domain/pigeomail/receiver"
 	"pigeomail/pkg/client/mongodb"
+	"pigeomail/pkg/client/rabbitmq"
 	"pigeomail/pkg/logger"
-	"pigeomail/rabbitmq"
 )
 
 // receiverCmd represents the receiver command
@@ -43,13 +45,18 @@ var receiverCmd = &cobra.Command{
 
 		var s = storage.NewStorage(db)
 
-		var publisher rabbitmq.IRMQEmailPublisher
-		if publisher, err = rabbitmq.NewRMQEmailPublisher(cfg.Rabbit.DSN); err != nil {
+		var rmqConn *amqp.Connection
+		if rmqConn, err = rabbitmq.NewConnection(cfg.Rabbit.DSN); err != nil {
+			return err
+		}
+
+		var pub publisher.Publisher
+		if pub, err = publisher.NewPublisher(rmqConn); err != nil {
 			return err
 		}
 
 		var backend smtp.Backend
-		if backend, err = receiver.NewBackend(s, publisher); err != nil {
+		if backend, err = receiver.NewBackend(s, pub); err != nil {
 			return err
 		}
 

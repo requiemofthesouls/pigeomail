@@ -5,23 +5,25 @@ import (
 	"fmt"
 	"html"
 	"net/http"
+	"os"
 	"time"
-
-	"pigeomail/internal/config"
-	"pigeomail/internal/domain/pigeomail"
-	"pigeomail/pkg/logger"
-	"pigeomail/rabbitmq"
 
 	"github.com/go-logr/logr"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/streadway/amqp"
+
+	"pigeomail/internal/adapters/rabbitmq/consumer"
+	"pigeomail/internal/config"
+	"pigeomail/internal/domain/pigeomail"
+	"pigeomail/pkg/client/rabbitmq"
+	"pigeomail/pkg/logger"
 )
 
 type Bot struct {
 	api      *tgbotapi.BotAPI
 	updates  tgbotapi.UpdatesChannel
 	svc      pigeomail.Service
-	consumer rabbitmq.IRMQEmailConsumer
+	consumer consumer.Consumer
 	domain   string
 	logger   *logr.Logger
 }
@@ -85,7 +87,12 @@ func getUpdatesChan(log *logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.
 	return updates
 }
 
-func NewTGBot(ctx context.Context, cfg *config.Config, svc pigeomail.Service) (bot *Bot, err error) {
+func NewTGBot(
+	ctx context.Context,
+	cfg *config.Config,
+	svc pigeomail.Service,
+	cons consumer.Consumer,
+) (bot *Bot, err error) {
 	var log = logger.GetLogger()
 
 	var tgAPI *tgbotapi.BotAPI
@@ -125,16 +132,11 @@ func NewTGBot(ctx context.Context, cfg *config.Config, svc pigeomail.Service) (b
 		return nil, err
 	}
 
-	var consumer rabbitmq.IRMQEmailConsumer
-	if consumer, err = rabbitmq.NewRMQEmailConsumer(cfg.Rabbit.DSN); err != nil {
-		return nil, err
-	}
-
 	return &Bot{
 		api:      tgAPI,
 		updates:  updates,
 		svc:      svc,
-		consumer: consumer,
+		consumer: cons,
 		domain:   cfg.SMTP.Server.Domain,
 		logger:   log,
 	}, nil
@@ -248,7 +250,12 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 }
 
 func (b *Bot) runConsumer() {
-	b.consumer.ConsumeIncomingEmail(b.incomingEmailConsumer)
+	err := b.consumer.Consume(rabbitmq.MessageReceivedQueueName, b.incomingEmailConsumer)
+	if err != nil {
+		b.logger.Error(err, "error runConsumer")
+		os.Exit(1)
+		return
+	}
 }
 
 func (b *Bot) runBot() {
