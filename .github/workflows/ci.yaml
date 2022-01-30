@@ -16,7 +16,7 @@ jobs:
       - name : ReviewDog
         uses: reviewdog/action-golangci-lint@v2
         with:
-          github_token: ${{ secrets.github_token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run linters
         uses: golangci/golangci-lint-action@v2
