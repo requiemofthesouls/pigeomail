@@ -13,15 +13,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run linters
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.31
-
       - name : ReviewDog
         uses: reviewdog/action-golangci-lint@v2
         with:
           github_token: ${{ secrets.github_token }}
+
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.31
 
   build:
     needs: lint
