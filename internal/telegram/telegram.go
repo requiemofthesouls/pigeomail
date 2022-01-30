@@ -251,12 +251,10 @@ func (b *Bot) runConsumer() {
 	b.consumer.ConsumeIncomingEmail(b.incomingEmailConsumer)
 }
 
-func (b *Bot) Run() {
-	go b.runConsumer()
-
+func (b *Bot) runBot() {
 	for update := range b.updates {
 		update := update
-		if !validateIncomingMessage(update.Message) {
+		if update.Message == nil {
 			continue
 		}
 
@@ -267,4 +265,9 @@ func (b *Bot) Run() {
 
 		b.handleUserInput(&update)
 	}
+}
+
+func (b *Bot) Run() {
+	go b.runConsumer()
+	b.runBot()
 }
