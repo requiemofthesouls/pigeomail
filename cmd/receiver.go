@@ -6,10 +6,10 @@ import (
 	"github.com/emersion/go-smtp"
 	"github.com/spf13/cobra"
 	"go.mongodb.org/mongo-driver/mongo"
+	receiver2 "pigeomail/internal/domain/pigeomail/receiver"
 
 	pigeomail2 "pigeomail/internal/adapters/db/pigeomail"
 	"pigeomail/internal/config"
-	"pigeomail/internal/receiver"
 	"pigeomail/pkg/client/mongodb"
 	"pigeomail/pkg/logger"
 	"pigeomail/rabbitmq"
@@ -49,12 +49,12 @@ var receiverCmd = &cobra.Command{
 		}
 
 		var backend smtp.Backend
-		if backend, err = receiver.NewBackend(repo, publisher); err != nil {
+		if backend, err = receiver2.NewBackend(repo, publisher); err != nil {
 			return err
 		}
 
-		var r *receiver.Receiver
-		if r, err = receiver.NewSMTPReceiver(
+		var r *receiver2.Receiver
+		if r, err = receiver2.NewSMTPReceiver(
 			backend,
 			cfg.SMTP.Server.Addr,
 			cfg.SMTP.Server.Domain,
