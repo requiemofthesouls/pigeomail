@@ -21,7 +21,7 @@ jobs:
       - name: Run linters
         uses: reviewdog/action-golangci-lint@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.REVIEW_TOKEN }}
           reporter: github-pr-review
           fail_on_error: true
 
