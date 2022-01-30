@@ -5,7 +5,8 @@ import (
 
 	"github.com/emersion/go-smtp"
 	"github.com/go-logr/logr"
-	"pigeomail/logger"
+
+	"pigeomail/pkg/logger"
 )
 
 type Receiver struct {

@@ -1,16 +1,19 @@
 package rabbitmq
 
 import (
-	"github.com/go-logr/logr"
 	"github.com/streadway/amqp"
+
+	"pigeomail/pkg/logger"
 )
 
 type IRMQEmailConsumer interface {
 	ConsumeIncomingEmail(handler func(msg *amqp.Delivery))
 }
 
-func NewRMQEmailConsumer(config *Config, log *logr.Logger) (IRMQEmailConsumer, error) {
-	conn, err := NewRMQConnection(config.DSN)
+func NewRMQEmailConsumer(dsn string) (IRMQEmailConsumer, error) {
+	var log = logger.GetLogger()
+
+	conn, err := NewRMQConnection(dsn)
 	if err != nil {
 		return nil, err
 	}

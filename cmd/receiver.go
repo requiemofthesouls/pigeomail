@@ -1,12 +1,17 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/emersion/go-smtp"
 	"github.com/spf13/cobra"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	pigeomail2 "pigeomail/internal/adapters/db/pigeomail"
 	"pigeomail/internal/config"
 	"pigeomail/internal/receiver"
-	"pigeomail/internal/repository"
-	"pigeomail/logger"
+	"pigeomail/pkg/client/mongodb"
+	"pigeomail/pkg/logger"
 	"pigeomail/rabbitmq"
 )
 
@@ -21,8 +26,11 @@ var receiverCmd = &cobra.Command{
 
 		var cfg = config.GetConfig()
 
-		var repo repository.IEmailRepository
-		if repo, err = repository.NewMongoRepository(
+		ctx := context.Background()
+
+		var db *mongo.Database
+		if db, err = mongodb.NewClient(
+			ctx,
 			cfg.Database.Host,
 			cfg.Database.Port,
 			cfg.Database.Username,
@@ -32,6 +40,8 @@ var receiverCmd = &cobra.Command{
 		); err != nil {
 			return err
 		}
+
+		var repo = pigeomail2.NewStorage(db)
 
 		var publisher rabbitmq.IRMQEmailPublisher
 		if publisher, err = rabbitmq.NewRMQEmailPublisher(cfg.Rabbit.DSN); err != nil {

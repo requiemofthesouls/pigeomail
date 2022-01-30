@@ -4,8 +4,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
 	"pigeomail/internal/config"
-	"pigeomail/logger"
+	"pigeomail/pkg/logger"
 )
 
 var configPath string

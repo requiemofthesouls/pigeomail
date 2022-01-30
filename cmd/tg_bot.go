@@ -1,15 +1,17 @@
 package cmd
 
 import (
-	"pigeomail/database"
-	"pigeomail/internal/receiver"
-	"pigeomail/internal/repository"
-	"pigeomail/internal/telegram"
-	"pigeomail/logger"
-	"pigeomail/rabbitmq"
+	"context"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	pigeomail2 "pigeomail/internal/adapters/db/pigeomail"
+	"pigeomail/internal/config"
+	"pigeomail/internal/domain/pigeomail"
+	"pigeomail/internal/telegram"
+	"pigeomail/pkg/client/mongodb"
+	"pigeomail/pkg/logger"
 )
 
 // tgBotCmd represents the tgBot command
@@ -18,50 +20,35 @@ var tgBotCmd = &cobra.Command{
 	Short: "Telegram bot which handles user input",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var log = logger.GetLogger()
+		var l = logger.GetLogger()
+		l.Info("building tg_bot")
 
-		var tgCfg *telegram.Config
-		if err = viper.UnmarshalKey("telegram", &tgCfg); err != nil {
-			return err
-		}
-		if err = viper.UnmarshalKey("telegram.webhook", &tgCfg.Webhook); err != nil {
-			return err
-		}
+		var cfg = config.GetConfig()
 
-		var dbCfg *database.Config
-		if err = viper.UnmarshalKey("database", &dbCfg); err != nil {
-			return err
-		}
+		ctx := context.Background()
 
-		var repo repository.IEmailRepository
-		if repo, err = repository.NewMongoRepository(
-			"",
-			"",
-			"",
-			"",
-			"",
+		var db *mongo.Database
+		if db, err = mongodb.NewClient(
+			ctx,
+			cfg.Database.Host,
+			cfg.Database.Port,
+			cfg.Database.Username,
+			cfg.Database.Password,
+			cfg.Database.DBName,
 			"",
 		); err != nil {
 			return err
 		}
 
-		var rmqCfg *rabbitmq.Config
-		if err = viper.UnmarshalKey("rabbitmq", &rmqCfg); err != nil {
-			return err
-		}
+		var strg = pigeomail2.NewStorage(db)
 
-		var smtpCfg *receiver.Config
-		if err = viper.UnmarshalKey("smtp.server", &smtpCfg); err != nil {
-			return err
-		}
+		var svc = pigeomail.NewService(strg)
 
 		var bot *telegram.Bot
 		if bot, err = telegram.NewTGBot(
-			tgCfg,
-			rmqCfg,
-			repo,
-			smtpCfg.Domain,
-			log,
+			ctx,
+			cfg,
+			svc,
 		); err != nil {
 			return err
 		}
@@ -73,14 +60,4 @@ var tgBotCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(tgBotCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// tgBotCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// tgBotCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

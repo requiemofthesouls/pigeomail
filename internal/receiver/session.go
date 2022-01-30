@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"time"
 
-	"pigeomail/database"
-	"pigeomail/internal/repository"
+	"pigeomail/internal/domain/pigeomail"
+	customerrors "pigeomail/pkg/errors"
 	"pigeomail/rabbitmq"
 
 	"github.com/emersion/go-smtp"
@@ -20,7 +20,7 @@ import (
 // A Session is returned after EHLO.
 type Session struct {
 	publisher rabbitmq.IRMQEmailPublisher
-	repo      repository.IEmailRepository
+	repo      pigeomail.Storage
 	logger    *logr.Logger
 }
 
@@ -38,7 +38,7 @@ func (s *Session) Rcpt(to string) error {
 	defer cancel()
 
 	if _, err := s.repo.GetEmailByName(ctx, to); err != nil {
-		if err == database.ErrNotFound {
+		if err == customerrors.ErrNotFound {
 			s.logger.V(10).Info("email not found, ignoring message", "email", to)
 			return ErrMailNotDelivered
 		}

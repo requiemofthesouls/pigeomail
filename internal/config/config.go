@@ -1,9 +1,9 @@
 package config
 
 import (
-	"pigeomail/logger"
-
 	"github.com/ilyakaznacheev/cleanenv"
+
+	"pigeomail/pkg/logger"
 )
 
 type Config struct {

@@ -1,8 +1,8 @@
 package receiver
 
 import (
-	"pigeomail/internal/repository"
-	"pigeomail/logger"
+	"pigeomail/internal/domain/pigeomail"
+	"pigeomail/pkg/logger"
 	"pigeomail/rabbitmq"
 
 	"github.com/emersion/go-smtp"
@@ -10,7 +10,7 @@ import (
 )
 
 func NewBackend(
-	repo repository.IEmailRepository,
+	repo pigeomail.Storage,
 	publisher rabbitmq.IRMQEmailPublisher,
 ) (b smtp.Backend, err error) {
 	return &backend{
@@ -23,7 +23,7 @@ func NewBackend(
 // The Backend implements SMTP server methods.
 type backend struct {
 	publisher rabbitmq.IRMQEmailPublisher
-	repo      repository.IEmailRepository
+	repo      pigeomail.Storage
 	logger    *logr.Logger
 }
 

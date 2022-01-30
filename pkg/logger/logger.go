@@ -7,7 +7,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func buildZapLogger() *zap.Logger {
+var l *logr.Logger
+
+func Init() {
 	zc := zap.NewProductionConfig()
 	zc.Level = zap.NewAtomicLevelAt(zapcore.Level(-10))
 	zc.OutputPaths = []string{"stdout"}
@@ -15,10 +17,12 @@ func buildZapLogger() *zap.Logger {
 	zc.DisableStacktrace = true
 	zc.DisableCaller = true
 	z, _ := zc.Build()
-	return z
+
+	log := zapr.NewLogger(z)
+
+	l = &log
 }
 
-func New() logr.Logger {
-	log := zapr.NewLogger(buildZapLogger())
-	return log
+func GetLogger() *logr.Logger {
+	return l
 }

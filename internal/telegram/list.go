@@ -3,10 +3,7 @@ package telegram
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
-
-	"pigeomail/database"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -19,22 +16,13 @@ func (b *Bot) handleListCommand(update *tgbotapi.Update) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	email, err := b.repo.GetEmailByChatID(ctx, update.Message.Chat.ID)
-	if err != nil && err == database.ErrNotFound {
-		msg.Text = "Email not found, /create a new one."
+	email, err := b.svc.GetEmailByChatID(ctx, update.Message.Chat.ID)
+	if err != nil {
+		msg.Text = err.Error()
 		_, _ = b.api.Send(msg)
 		return
 	}
 
-	if err != nil && err != database.ErrNotFound {
-		log.Println("error: " + err.Error())
-		b.internalErrorResponse(update.Message.Chat.ID)
-		return
-	}
-
 	msg.Text = fmt.Sprintf("Your active email: <%s>", email.Name)
-
-	if _, err = b.api.Send(msg); err != nil {
-		log.Panic(err)
-	}
+	_, _ = b.api.Send(msg)
 }

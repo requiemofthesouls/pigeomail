@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"pigeomail/internal/repository"
+	"pigeomail/internal/config"
+	"pigeomail/internal/domain/pigeomail"
+	"pigeomail/pkg/logger"
 	"pigeomail/rabbitmq"
 
 	"github.com/go-logr/logr"
@@ -18,19 +20,23 @@ import (
 type Bot struct {
 	api      *tgbotapi.BotAPI
 	updates  tgbotapi.UpdatesChannel
-	repo     repository.IEmailRepository
+	svc      pigeomail.Service
 	consumer rabbitmq.IRMQEmailConsumer
 	domain   string
 	logger   *logr.Logger
 }
 
-func getWebhookUpdatesChan(log *logr.Logger, domain string, tgAPI *tgbotapi.BotAPI, cfg *Config) (updates tgbotapi.UpdatesChannel, err error) {
-	log.Info("starting tg_bot in webhook mode", "port", cfg.Webhook.Port)
+func getWebhookUpdatesChan(
+	tgAPI *tgbotapi.BotAPI,
+	domain, port, cert, key string,
+) (updates tgbotapi.UpdatesChannel, err error) {
+	var log = logger.GetLogger()
+	log.Info("starting tg_bot in webhook mode", "port", port)
 
 	var whCfg tgbotapi.WebhookConfig
 	whCfg, err = tgbotapi.NewWebhookWithCert(
-		fmt.Sprintf("https://%s:%d/%s", domain, cfg.Webhook.Port, tgAPI.Token),
-		tgbotapi.FilePath(cfg.Webhook.Cert),
+		fmt.Sprintf("https://%s:%s/%s", domain, port, tgAPI.Token),
+		tgbotapi.FilePath(cert),
 	)
 	if err != nil {
 		log.Error(err, "fail to initialize tgbotapi.NewWebhookWithCert")
@@ -56,9 +62,9 @@ func getWebhookUpdatesChan(log *logr.Logger, domain string, tgAPI *tgbotapi.BotA
 
 	go func() {
 		err = http.ListenAndServeTLS(
-			fmt.Sprintf("0.0.0.0:%d", cfg.Webhook.Port),
-			cfg.Webhook.Cert,
-			cfg.Webhook.Key,
+			fmt.Sprintf("0.0.0.0:%s", port),
+			cert,
+			key,
 			nil,
 		)
 		if err != nil {
@@ -79,9 +85,11 @@ func getUpdatesChan(log *logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.
 	return updates
 }
 
-func NewTGBot(cfg *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailRepository, domain string, log *logr.Logger) (bot *Bot, err error) {
+func NewTGBot(ctx context.Context, cfg *config.Config, svc pigeomail.Service) (bot *Bot, err error) {
+	var log = logger.GetLogger()
+
 	var tgAPI *tgbotapi.BotAPI
-	if tgAPI, err = tgbotapi.NewBotAPI(cfg.Token); err != nil {
+	if tgAPI, err = tgbotapi.NewBotAPI(cfg.Telegram.Token); err != nil {
 		return nil, err
 	}
 	tgAPI.Debug = cfg.Debug
@@ -100,9 +108,15 @@ func NewTGBot(cfg *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailReposi
 	}
 
 	var updates tgbotapi.UpdatesChannel
-	switch cfg.Webhook.Enabled {
+	switch cfg.Telegram.Webhook.Enabled {
 	case true:
-		updates, err = getWebhookUpdatesChan(log, domain, tgAPI, cfg)
+		updates, err = getWebhookUpdatesChan(
+			tgAPI,
+			cfg.SMTP.Server.Domain,
+			cfg.Telegram.Webhook.Port,
+			cfg.Telegram.Webhook.Cert,
+			cfg.Telegram.Webhook.Key,
+		)
 	case false:
 		updates = getUpdatesChan(log, tgAPI)
 	}
@@ -112,16 +126,16 @@ func NewTGBot(cfg *Config, rmqCfg *rabbitmq.Config, repo repository.IEmailReposi
 	}
 
 	var consumer rabbitmq.IRMQEmailConsumer
-	if consumer, err = rabbitmq.NewRMQEmailConsumer(rmqCfg, log); err != nil {
+	if consumer, err = rabbitmq.NewRMQEmailConsumer(cfg.Rabbit.DSN); err != nil {
 		return nil, err
 	}
 
 	return &Bot{
 		api:      tgAPI,
 		updates:  updates,
-		repo:     repo,
+		svc:      svc,
 		consumer: consumer,
-		domain:   domain,
+		domain:   cfg.SMTP.Server.Domain,
 		logger:   log,
 	}, nil
 }
@@ -167,7 +181,7 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	chatID, err := b.repo.GetChatIDByEmail(ctx, to.(string))
+	chatID, err := b.svc.GetChatIDByEmail(ctx, to.(string))
 	if err != nil {
 		b.logger.Error(err, "chatID not found", "email", to)
 		_ = msg.Reject(false)
