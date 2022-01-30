@@ -3,8 +3,8 @@ package consumer
 import (
 	"github.com/go-logr/logr"
 	"github.com/streadway/amqp"
-	"pigeomail/internal/adapters/rabbitmq"
 
+	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/pkg/logger"
 )
 

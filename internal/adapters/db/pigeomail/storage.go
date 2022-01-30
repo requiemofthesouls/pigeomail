@@ -5,9 +5,9 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"pigeomail/internal/errors"
 
 	"pigeomail/internal/domain/pigeomail"
+	customerrors "pigeomail/internal/errors"
 )
 
 type pigeomailStorage struct {

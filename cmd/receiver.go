@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/mongo"
-	"pigeomail/internal/adapters/rabbitmq"
 
 	storage "pigeomail/internal/adapters/db/pigeomail"
+	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/internal/adapters/rabbitmq/publisher"
 	"pigeomail/internal/config"
 	"pigeomail/internal/domain/pigeomail/receiver"

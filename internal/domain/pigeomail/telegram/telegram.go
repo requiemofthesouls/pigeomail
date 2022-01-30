@@ -13,10 +13,11 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 	"github.com/streadway/amqp"
+
 	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/internal/config"
 	"pigeomail/internal/domain/pigeomail"
-	"pigeomail/internal/errors"
+	customerrors "pigeomail/internal/errors"
 	"pigeomail/pkg/logger"
 )
 
@@ -294,5 +295,4 @@ func (b *Bot) handleError(err error, chatID int64) {
 	b.logger.Error(err, "unexpected error", "error_code", uid)
 	msg.Text = "unexpected error, contact with support and send error code: " + uid
 	_, _ = b.api.Send(msg)
-	return
 }

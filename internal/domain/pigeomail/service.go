@@ -3,7 +3,7 @@ package pigeomail
 import (
 	"context"
 
-	"pigeomail/internal/errors"
+	customerrors "pigeomail/internal/errors"
 )
 
 type Service interface {

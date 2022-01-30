@@ -3,8 +3,8 @@ package receiver
 import (
 	"github.com/emersion/go-smtp"
 	"github.com/go-logr/logr"
-	"pigeomail/internal/adapters/rabbitmq"
 
+	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/internal/domain/pigeomail"
 	"pigeomail/pkg/logger"
 )
