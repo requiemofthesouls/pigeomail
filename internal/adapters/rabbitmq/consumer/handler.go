@@ -3,20 +3,17 @@ package consumer
 import (
 	"github.com/go-logr/logr"
 	"github.com/streadway/amqp"
+	"pigeomail/internal/adapters/rabbitmq"
 
 	"pigeomail/pkg/logger"
 )
-
-type Consumer interface {
-	Consume(queue string, handler func(msg *amqp.Delivery)) error
-}
 
 type client struct {
 	ch     *amqp.Channel
 	logger *logr.Logger
 }
 
-func NewConsumer(conn *amqp.Connection) (Consumer, error) {
+func NewConsumer(conn *amqp.Connection) (rabbitmq.Consumer, error) {
 	var log = logger.GetLogger()
 
 	ch, err := conn.Channel()

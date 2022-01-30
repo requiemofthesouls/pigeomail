@@ -8,12 +8,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	storage "pigeomail/internal/adapters/db/pigeomail"
+	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/internal/adapters/rabbitmq/consumer"
 	"pigeomail/internal/config"
 	"pigeomail/internal/domain/pigeomail"
 	"pigeomail/internal/domain/pigeomail/telegram"
 	"pigeomail/pkg/client/mongodb"
-	"pigeomail/pkg/client/rabbitmq"
+	rmq "pigeomail/pkg/client/rabbitmq"
 	"pigeomail/pkg/logger"
 )
 
@@ -47,11 +48,11 @@ var tgBotCmd = &cobra.Command{
 		var svc = pigeomail.NewService(s)
 
 		var conn *amqp.Connection
-		if conn, err = rabbitmq.NewConnection(cfg.Rabbit.DSN); err != nil {
+		if conn, err = rmq.NewConnection(cfg.Rabbit.DSN); err != nil {
 			return err
 		}
 
-		var cons consumer.Consumer
+		var cons rabbitmq.Consumer
 		if cons, err = consumer.NewConsumer(conn); err != nil {
 			return err
 		}

@@ -3,20 +3,17 @@ package publisher
 import (
 	"github.com/go-logr/logr"
 	"github.com/streadway/amqp"
+	"pigeomail/internal/adapters/rabbitmq"
 
 	"pigeomail/pkg/logger"
 )
-
-type Publisher interface {
-	Publish(queue string, msg *amqp.Publishing) error
-}
 
 type client struct {
 	ch     *amqp.Channel
 	logger *logr.Logger
 }
 
-func NewPublisher(conn *amqp.Connection) (Publisher, error) {
+func NewPublisher(conn *amqp.Connection) (rabbitmq.Publisher, error) {
 	var log = logger.GetLogger()
 
 	ch, err := conn.Channel()

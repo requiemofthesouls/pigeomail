@@ -12,10 +12,9 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/streadway/amqp"
 
-	"pigeomail/internal/adapters/rabbitmq/consumer"
+	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/internal/config"
 	"pigeomail/internal/domain/pigeomail"
-	"pigeomail/pkg/client/rabbitmq"
 	"pigeomail/pkg/logger"
 )
 
@@ -23,7 +22,7 @@ type Bot struct {
 	api      *tgbotapi.BotAPI
 	updates  tgbotapi.UpdatesChannel
 	svc      pigeomail.Service
-	consumer consumer.Consumer
+	consumer rabbitmq.Consumer
 	domain   string
 	logger   *logr.Logger
 }
@@ -91,7 +90,7 @@ func NewTGBot(
 	ctx context.Context,
 	cfg *config.Config,
 	svc pigeomail.Service,
-	cons consumer.Consumer,
+	cons rabbitmq.Consumer,
 ) (bot *Bot, err error) {
 	var log = logger.GetLogger()
 

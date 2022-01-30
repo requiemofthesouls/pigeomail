@@ -14,15 +14,14 @@ import (
 	"github.com/jhillyerd/enmime"
 	"github.com/streadway/amqp"
 
-	"pigeomail/internal/adapters/rabbitmq/publisher"
+	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/internal/domain/pigeomail"
-	"pigeomail/pkg/client/rabbitmq"
 	customerrors "pigeomail/pkg/errors"
 )
 
 // A session is returned after EHLO.
 type session struct {
-	publisher publisher.Publisher
+	publisher rabbitmq.Publisher
 	repo      pigeomail.Storage
 	logger    *logr.Logger
 }
