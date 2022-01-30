@@ -19,9 +19,7 @@ jobs:
           version: v1.31
 
       - name : ReviewDog
-        uses: reviewdog/action-setup@v1
-        with:
-          reviewdog_version: latest
+        uses: reviewdog/action-golangci-lint@v2
 
   build:
     needs: lint
