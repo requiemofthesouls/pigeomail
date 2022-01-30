@@ -30,6 +30,7 @@ type Bot struct {
 }
 
 var taa = ""
+var taa1 = ""
 
 func getWebhookUpdatesChan(
 	tgAPI *tgbotapi.BotAPI,

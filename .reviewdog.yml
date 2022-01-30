@@ -1,0 +1,7 @@
+runner:
+  golangci-lint:
+    cmd: golangci-lint run
+    format: golint
+    name: GolangCILint
+    reporter: github-pr-review
+    fail-on-error: true

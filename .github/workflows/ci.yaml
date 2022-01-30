@@ -18,12 +18,11 @@ jobs:
         with:
           reviewdog_version: latest
 
-      - name: Run linters
-        uses: reviewdog/action-golangci-lint@v2
-        with:
-          github_token: ${{ secrets.REVIEW_TOKEN }}
-          reporter: github-pr-review
-          fail_on_error: true
+      - name: Run reviewdog
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEW_TOKEN }}
+        run: |
+          reviewdog -conf=.reviewdog.yml --diff="git diff master"
 
   build:
     needs: lint
