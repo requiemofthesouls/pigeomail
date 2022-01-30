@@ -16,7 +16,7 @@ func (b *Bot) handleUserInput(update *tgbotapi.Update) {
 	var state pigeomail.UserState
 	var err error
 	if state, err = b.svc.GetUserState(ctx, update.Message.Chat.ID); err != nil {
-		b.logger.Error(err, "error GetUserState")
+		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
 

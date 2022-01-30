@@ -2,10 +2,8 @@ package pigeomail
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
-	customerrors "pigeomail/pkg/errors"
+	"pigeomail/internal/errors"
 )
 
 type Service interface {
@@ -27,7 +25,7 @@ type service struct {
 func (s *service) GetEmailByChatID(ctx context.Context, chatID int64) (email EMail, err error) {
 	email, err = s.storage.GetEmailByChatID(ctx, chatID)
 	if err != nil && err == customerrors.ErrNotFound {
-		return email, errors.New("email not found, /create a new one")
+		return email, customerrors.NewTelegramError("email not found, /create a new one")
 	}
 
 	return email, err
@@ -45,7 +43,7 @@ func (s *service) PrepareCreateEmail(ctx context.Context, chatID int64) (err err
 	}
 
 	if err == nil {
-		return errors.New("email already created: " + email.Name)
+		return customerrors.NewTelegramError("email already created: " + email.Name)
 	}
 
 	var userState = UserState{
@@ -63,7 +61,7 @@ func (s *service) PrepareCreateEmail(ctx context.Context, chatID int64) (err err
 func (s *service) PrepareDeleteEmail(ctx context.Context, chatID int64) (email EMail, err error) {
 	if email, err = s.storage.GetEmailByChatID(ctx, chatID); err != nil {
 		if err == customerrors.ErrNotFound {
-			return email, errors.New("there's no created email, use /create")
+			return email, customerrors.NewTelegramError("there's no created email, use /create")
 		}
 
 		return email, err
@@ -81,13 +79,13 @@ func (s *service) PrepareDeleteEmail(ctx context.Context, chatID int64) (email E
 	return email, nil
 }
 
-func (s *service) CancelDeleteEmail(ctx context.Context, chatID int64) error {
+func (s *service) CancelDeleteEmail(ctx context.Context, chatID int64) (err error) {
 	var userState = UserState{
 		ChatID: chatID,
 		State:  StateDeleteEmailStep1,
 	}
 
-	if err := s.storage.DeleteUserState(ctx, userState); err != nil {
+	if err = s.storage.DeleteUserState(ctx, userState); err != nil {
 		return err
 	}
 
@@ -122,7 +120,7 @@ func (s *service) CreateEmail(ctx context.Context, email EMail) (err error) {
 	}
 
 	if err == nil {
-		return fmt.Errorf("email <%s> already exists, please choose a new one", email.Name)
+		return customerrors.NewTelegramError("email <" + email.Name + "> already exists, please choose a new one")
 	}
 
 	if err = s.storage.CreateEmail(ctx, email); err != nil {

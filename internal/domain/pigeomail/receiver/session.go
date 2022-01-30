@@ -13,10 +13,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/jhillyerd/enmime"
 	"github.com/streadway/amqp"
+	"pigeomail/internal/errors"
 
 	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/internal/domain/pigeomail"
-	customerrors "pigeomail/pkg/errors"
 )
 
 // A session is returned after EHLO.

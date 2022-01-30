@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html"
 	"net/http"
@@ -10,11 +11,12 @@ import (
 
 	"github.com/go-logr/logr"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/google/uuid"
 	"github.com/streadway/amqp"
-
 	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/internal/config"
 	"pigeomail/internal/domain/pigeomail"
+	"pigeomail/internal/errors"
 	"pigeomail/pkg/logger"
 )
 
@@ -276,4 +278,21 @@ func (b *Bot) runBot() {
 func (b *Bot) Run() {
 	go b.runConsumer()
 	b.runBot()
+}
+
+func (b *Bot) handleError(err error, chatID int64) {
+	msg := tgbotapi.NewMessage(chatID, "")
+
+	var customErr *customerrors.TelegramError
+	if errors.As(err, &customErr) {
+		msg.Text = customErr.Error()
+		_, _ = b.api.Send(msg)
+		return
+	}
+
+	uid := uuid.New().String()
+	b.logger.Error(err, "unexpected error", "error_code", uid)
+	msg.Text = "unexpected error, contact with support and send error code: " + uid
+	_, _ = b.api.Send(msg)
+	return
 }

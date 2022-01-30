@@ -18,8 +18,7 @@ func (b *Bot) handleListCommand(update *tgbotapi.Update) {
 
 	email, err := b.svc.GetEmailByChatID(ctx, update.Message.Chat.ID)
 	if err != nil {
-		msg.Text = err.Error()
-		_, _ = b.api.Send(msg)
+		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
 

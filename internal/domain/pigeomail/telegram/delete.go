@@ -21,8 +21,7 @@ func (b *Bot) handleDeleteCommandStep1(update *tgbotapi.Update) {
 	var err error
 	var email pigeomail.EMail
 	if email, err = b.svc.PrepareDeleteEmail(ctx, update.Message.Chat.ID); err != nil {
-		msg.Text = err.Error()
-		_, _ = b.api.Send(msg)
+		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
 
@@ -39,8 +38,8 @@ func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 		msg.Text = "exiting from delete mode..."
 
 		if err := b.svc.CancelDeleteEmail(ctx, update.Message.Chat.ID); err != nil {
-			msg.Text += " "
-			msg.Text += err.Error()
+			b.handleError(err, update.Message.Chat.ID)
+			return
 		}
 
 		_, _ = b.api.Send(msg)
@@ -48,8 +47,7 @@ func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 	}
 
 	if err := b.svc.DeleteEmail(ctx, update.Message.Chat.ID); err != nil {
-		msg.Text = err.Error()
-		_, _ = b.api.Send(msg)
+		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
 
