@@ -58,9 +58,15 @@ var tgBotCmd = &cobra.Command{
 		}
 
 		var bot *telegram.Bot
-		if bot, err = telegram.NewTGBot(
+		if bot, err = telegram.NewBot(
 			ctx,
-			cfg,
+			cfg.Debug,
+			cfg.Telegram.Webhook.Enabled,
+			cfg.Telegram.Token,
+			cfg.SMTP.Server.Domain,
+			cfg.Telegram.Webhook.Port,
+			cfg.Telegram.Webhook.Cert,
+			cfg.Telegram.Webhook.Key,
 			svc,
 			cons,
 		); err != nil {

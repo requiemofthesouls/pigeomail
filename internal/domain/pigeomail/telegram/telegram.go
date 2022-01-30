@@ -15,7 +15,6 @@ import (
 	"github.com/streadway/amqp"
 
 	"pigeomail/internal/adapters/rabbitmq"
-	"pigeomail/internal/config"
 	"pigeomail/internal/domain/pigeomail"
 	customerrors "pigeomail/internal/errors"
 	"pigeomail/pkg/logger"
@@ -89,19 +88,20 @@ func getUpdatesChan(log *logr.Logger, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.
 	return updates
 }
 
-func NewTGBot(
+func NewBot(
 	ctx context.Context,
-	cfg *config.Config,
+	debug, webhookMode bool,
+	token, domain, port, cert, key string,
 	svc pigeomail.Service,
 	cons rabbitmq.Consumer,
 ) (bot *Bot, err error) {
 	var log = logger.GetLogger()
 
 	var tgAPI *tgbotapi.BotAPI
-	if tgAPI, err = tgbotapi.NewBotAPI(cfg.Telegram.Token); err != nil {
+	if tgAPI, err = tgbotapi.NewBotAPI(token); err != nil {
 		return nil, err
 	}
-	tgAPI.Debug = cfg.Debug
+	tgAPI.Debug = debug
 	log.Info("authorized", "account", tgAPI.Self.UserName)
 
 	log.Info("removing previous webhook")
@@ -117,14 +117,14 @@ func NewTGBot(
 	}
 
 	var updates tgbotapi.UpdatesChannel
-	switch cfg.Telegram.Webhook.Enabled {
+	switch webhookMode {
 	case true:
 		updates, err = getWebhookUpdatesChan(
 			tgAPI,
-			cfg.SMTP.Server.Domain,
-			cfg.Telegram.Webhook.Port,
-			cfg.Telegram.Webhook.Cert,
-			cfg.Telegram.Webhook.Key,
+			domain,
+			port,
+			cert,
+			key,
 		)
 	case false:
 		updates = getUpdatesChan(log, tgAPI)
@@ -139,7 +139,7 @@ func NewTGBot(
 		updates:  updates,
 		svc:      svc,
 		consumer: cons,
-		domain:   cfg.SMTP.Server.Domain,
+		domain:   domain,
 		logger:   log,
 	}, nil
 }
