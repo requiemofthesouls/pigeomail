@@ -2,10 +2,10 @@ package telegram
 
 import (
 	"context"
-	"log"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"pigeomail/pkg/logger"
 
 	"pigeomail/internal/domain/pigeomail"
 )
@@ -14,11 +14,12 @@ func (b *Bot) handleUserInput(update *tgbotapi.Update) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	var l = logger.GetLogger()
+
 	var state pigeomail.UserState
 	var err error
 	if state, err = b.svc.GetUserState(ctx, update.Message.Chat.ID); err != nil {
-		log.Println("error: " + err.Error())
-		b.internalErrorResponse(update.Message.Chat.ID)
+		l.Error(err, "error GetUserState")
 		return
 	}
 
