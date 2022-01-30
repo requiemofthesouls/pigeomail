@@ -20,6 +20,8 @@ jobs:
 
       - name : ReviewDog
         uses: reviewdog/action-golangci-lint@v2
+        with:
+          github_token: ${{ secrets.github_token }}
 
   build:
     needs: lint
