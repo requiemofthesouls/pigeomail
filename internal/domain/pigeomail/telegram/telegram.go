@@ -13,8 +13,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 	"github.com/streadway/amqp"
-
 	"pigeomail/internal/adapters/rabbitmq"
+
 	"pigeomail/internal/domain/pigeomail"
 	customerrors "pigeomail/internal/errors"
 	"pigeomail/pkg/logger"
