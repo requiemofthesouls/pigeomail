@@ -13,12 +13,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run linters
+      - name: Install review dog
         uses: reviewdog/action-setup@v1
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_TOKEN }}
         with:
           reviewdog_version: latest
+
+      - name: Run linters
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_TOKEN }}
         run: |
           golangci-lint run | reviewdog -f=golangci-lint -reporter=github-pr-review
 
