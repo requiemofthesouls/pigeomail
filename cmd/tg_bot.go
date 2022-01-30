@@ -5,11 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.mongodb.org/mongo-driver/mongo"
-	"pigeomail/internal/domain/pigeomail/telegram"
 
-	pigeomail2 "pigeomail/internal/adapters/db/pigeomail"
+	storage "pigeomail/internal/adapters/db/pigeomail"
 	"pigeomail/internal/config"
 	"pigeomail/internal/domain/pigeomail"
+	"pigeomail/internal/domain/pigeomail/telegram"
 	"pigeomail/pkg/client/mongodb"
 	"pigeomail/pkg/logger"
 )
@@ -40,9 +40,8 @@ var tgBotCmd = &cobra.Command{
 			return err
 		}
 
-		var strg = pigeomail2.NewStorage(db)
-
-		var svc = pigeomail.NewService(strg)
+		var s = storage.NewStorage(db)
+		var svc = pigeomail.NewService(s)
 
 		var bot *telegram.Bot
 		if bot, err = telegram.NewTGBot(

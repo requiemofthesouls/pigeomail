@@ -5,10 +5,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type Config struct {
-	DSN string `yaml:"dsn"`
-}
-
 type client struct {
 	ch     *amqp.Channel
 	logger *logr.Logger
