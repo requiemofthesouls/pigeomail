@@ -7,6 +7,7 @@ require (
 	github.com/go-logr/logr v1.2.2
 	github.com/go-logr/zapr v1.2.2
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
+	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.1.2
 	github.com/ilyakaznacheev/cleanenv v1.2.6
 	github.com/jhillyerd/enmime v0.9.2

@@ -1,3 +1,4 @@
+//go:generate mockgen -package=mocks -destination=mock/mock_interace.go -source=interface.go
 package rabbitmq
 
 import (

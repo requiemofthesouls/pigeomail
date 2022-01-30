@@ -1,3 +1,4 @@
+//go:generate mockgen -package=mocks -destination=mock/mock_service.go -source=service.go
 package pigeomail
 
 import (
