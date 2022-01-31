@@ -32,7 +32,7 @@ jobs:
         uses: reviewdog/action-golangci-lint@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          level: info
+          level: warning
           golangci_lint_flags: "--config=.golangci.yml"
 
   golangci-lint-platform:
