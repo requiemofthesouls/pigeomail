@@ -80,7 +80,6 @@ jobs:
           reporter: "github-check"
 
   build:
-    needs: lint
     name: Build
     runs-on: ubuntu-latest
     steps:
