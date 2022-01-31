@@ -1,8 +1,9 @@
 package pigeomail
 
 import (
-	"errors"
 	"net/mail"
+
+	customerrors "pigeomail/internal/errors"
 )
 
 type EMail struct {
@@ -13,7 +14,7 @@ type EMail struct {
 
 func (e *EMail) Validate() (err error) {
 	if _, err = mail.ParseAddress(e.Name); err != nil {
-		return errors.New("mail name isn't valid, please choose a new one")
+		return customerrors.NewTelegramError("mail name isn't valid, please choose a new one")
 	}
 
 	return nil
