@@ -25,7 +25,7 @@ jobs:
       - name: ReviewDog
         uses: reviewdog/action-golangci-lint@v2
         with:
-          github_token: ${{ secrets.REVIEW_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           level: info
           reporter: github-check
           fail_on_error: true

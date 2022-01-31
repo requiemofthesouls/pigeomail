@@ -30,6 +30,9 @@ type Bot struct {
 }
 
 var nameAAA = ""
+var nameAAA1 = ""
+var nameAAA2 = ""
+var nameAAA3 = ""
 
 func getWebhookUpdatesChan(
 	tgAPI *tgbotapi.BotAPI,
