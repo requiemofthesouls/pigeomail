@@ -29,7 +29,8 @@ type Bot struct {
 	logger   *logr.Logger
 }
 
-var Adsads = ""
+var dsads = ""
+var dsads1 = ""
 
 func getWebhookUpdatesChan(
 	tgAPI *tgbotapi.BotAPI,
