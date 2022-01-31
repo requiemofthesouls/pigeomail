@@ -7,6 +7,10 @@ on:
 
 jobs:
   lint:
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
     name: Linter
     runs-on: ubuntu-latest
     steps:
