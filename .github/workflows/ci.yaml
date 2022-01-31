@@ -1,9 +1,6 @@
 name: Build and test
 on:
   push:
-    branches:
-      - master
-  pull_request:
 
 jobs:
   lint:
@@ -27,7 +24,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           level: info
-          reporter: github-pr-review
+          reporter: github-check
           fail_on_error: true
 
   build:
