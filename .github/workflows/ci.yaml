@@ -52,6 +52,7 @@ jobs:
           tool_name: golangci-lint-${{ matrix.platform }}
           level: info
           golangci_lint_flags: "--config=.golangci.yml"
+          fail_on_error: true
 
   golangci-lint-github-pr-review:
     name: runner / golangci-lint (github-pr-review)
@@ -65,6 +66,7 @@ jobs:
           golangci_lint_flags: "--config=.golangci.yml"
           tool_name: "golangci-lint-github-pr-review"
           reporter: "github-pr-review"
+          fail_on_error: true
 
   golangci-lint-github-check:
     name: runner / golangci-lint (github-check)
@@ -79,6 +81,7 @@ jobs:
           tool_name: "golangci-lint-github-check"
           level: info
           reporter: "github-check"
+          fail_on_error: true
 
   build:
     name: Build
