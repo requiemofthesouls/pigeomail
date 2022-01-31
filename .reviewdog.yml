@@ -1,8 +1,0 @@
-runner:
-  golangci-lint:
-    cmd: golangci-lint run
-    format: golangci-lint
-    name: GolangCILint
-    fail-on-error: true
-    level: info
-    reporter: github-check
