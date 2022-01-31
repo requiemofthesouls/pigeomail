@@ -1,3 +1,5 @@
+debug: true
+
 smtp:
   server:
     addr: ":21025"
@@ -12,7 +14,6 @@ smtp:
 
 telegram:
   token: "your_Bot_token"
-  debug: true
   webhook:
     enabled: false
     port: 8443
@@ -23,7 +24,8 @@ rabbitmq:
   dsn: "amqp://guest:guest@rabbitmq:5672/"
 
 database:
-  hostname: "mongo"
+  host: "mongo"
   port: 27017
   username: "root"
   password: "example"
+  db_name: "example"
