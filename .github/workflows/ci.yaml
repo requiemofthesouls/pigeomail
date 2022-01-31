@@ -3,27 +3,37 @@ on:
   [push, pull_request]
 
 jobs:
-#  lint:
-#    permissions:
-#      checks: write
-#      contents: read
-#      pull-requests: write
-#    name: Linter
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#
-#      - name: ReviewDog
-#        uses: reviewdog/action-golangci-lint@v2
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          level: info
-#          reporter: github-check
-#          fail_on_error: true
+  golangci-lint-github-pr-review:
+    name: golangci-lint (github-pr-review)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+      - name: golangci-lint w/ github-pr-review
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          golangci_lint_flags: "--config=.golangci.yml"
+          tool_name: "golangci-lint-github-pr-review"
+          reporter: "github-pr-review"
+          fail_on_error: true
+
+  golangci-lint-github-check:
+    name: golangci-lint (github-check)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+      - name: golangci-lint w/ github-check
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          golangci_lint_flags: "--config=.golangci.yml"
+          tool_name: "golangci-lint-github-check"
+          level: info
+          reporter: "github-check"
+          fail_on_error: true
 
   golangci-lint:
-    name: runner / golangci-lint
+    name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
@@ -37,7 +47,7 @@ jobs:
           fail_on_error: true
 
   golangci-lint-platform:
-    name: runner / golangci-lint-platform
+    name: golangci-lint-platform
     strategy:
       fail-fast: false
       matrix:
@@ -52,35 +62,6 @@ jobs:
           tool_name: golangci-lint-${{ matrix.platform }}
           level: info
           golangci_lint_flags: "--config=.golangci.yml"
-          fail_on_error: true
-
-  golangci-lint-github-pr-review:
-    name: runner / golangci-lint (github-pr-review)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-      - name: golangci-lint w/ github-pr-review
-        uses: reviewdog/action-golangci-lint@v2
-        with:
-          golangci_lint_flags: "--config=.golangci.yml"
-          tool_name: "golangci-lint-github-pr-review"
-          reporter: "github-pr-review"
-          fail_on_error: true
-
-  golangci-lint-github-check:
-    name: runner / golangci-lint (github-check)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-      - name: golangci-lint w/ github-check
-        uses: reviewdog/action-golangci-lint@v2
-        with:
-          golangci_lint_flags: "--config=.golangci.yml"
-          tool_name: "golangci-lint-github-check"
-          level: info
-          reporter: "github-check"
           fail_on_error: true
 
   build:
