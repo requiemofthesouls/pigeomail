@@ -32,8 +32,9 @@ jobs:
         uses: reviewdog/action-golangci-lint@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          level: warning
+          level: info
           golangci_lint_flags: "--config=.golangci.yml"
+          fail_on_error: true
 
   golangci-lint-platform:
     name: runner / golangci-lint-platform
