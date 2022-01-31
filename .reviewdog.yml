@@ -3,6 +3,5 @@ runner:
     cmd: golangci-lint run
     format: golint
     name: GolangCILint
-    reporter: github-check
     fail-on-error: true
     level: info
