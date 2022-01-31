@@ -1,7 +1,7 @@
 runner:
   golangci-lint:
     cmd: golangci-lint run
-    format: golint
+    format: golangci-lint
     name: GolangCILint
     fail-on-error: true
     level: info

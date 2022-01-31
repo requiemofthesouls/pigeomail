@@ -29,6 +29,8 @@ type Bot struct {
 	logger   *logr.Logger
 }
 
+var td = ""
+
 func getWebhookUpdatesChan(
 	tgAPI *tgbotapi.BotAPI,
 	domain, port, cert, key string,
