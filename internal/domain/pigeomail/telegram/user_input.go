@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -19,9 +18,7 @@ func (b *Bot) handleUserInput(update *tgbotapi.Update) {
 	var state pigeomail.UserState
 	var err error
 	if state, err = b.svc.GetUserState(ctx, update.Message.Chat.ID); err != nil {
-		sentry.CaptureMessage("test123")
 		if err != customerrors.ErrNotFound {
-			log.Println("error: " + err.Error())
 			sentry.CaptureException(err)
 			b.handleError(err, update.Message.Chat.ID)
 		}
