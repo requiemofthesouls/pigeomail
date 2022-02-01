@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"pigeomail/database"
+	"pigeomail/internal/fsm"
 	"pigeomail/internal/repository"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -35,7 +36,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 		return
 	}
 
-	_, _ = b.usersFsmManager.SendEvent(update.Message.Chat.ID, CreateEmail)
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.CreateEmail)
 
 	msg.Text = "Enter your mailbox name:"
 
@@ -90,7 +91,7 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 		return
 	}
 
-	_, _ = b.usersFsmManager.SendEvent(update.Message.Chat.ID, ChooseEmail)
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.ChooseEmail)
 
 	msg.Text = fmt.Sprintf("Email <%s> has been created successfully.", update.Message.Text+"@"+b.domain)
 

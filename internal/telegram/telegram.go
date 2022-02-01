@@ -14,22 +14,6 @@ import (
 	"pigeomail/rabbitmq"
 )
 
-// User states
-const (
-	Idle fsm.State = iota
-	ChoosingEmail
-	DeletingEmail
-)
-
-// User events
-const (
-	CreateEmail fsm.Event = iota
-	ChooseEmail
-	DeleteEmail
-	ConfirmDeletion
-	Cancel
-)
-
 type Bot struct {
 	api             *tgbotapi.BotAPI
 	updates         tgbotapi.UpdatesChannel
@@ -66,30 +50,12 @@ func NewTGBot(
 		return nil, err
 	}
 
-	var (
-		usersFsm = fsm.NewFSM(fsm.Transitions{
-			Idle: {
-				CreateEmail: ChoosingEmail,
-				DeleteEmail: DeletingEmail,
-			},
-			ChoosingEmail: {
-				ChooseEmail: Idle,
-				Cancel:      Idle,
-			},
-			DeletingEmail: {
-				ConfirmDeletion: Idle,
-				Cancel:          Idle,
-			},
-		})
-		usersFsmManager = fsm.NewUserManager(Idle, usersFsm)
-	)
-
 	return &Bot{
 		api:             bot,
 		updates:         updates,
 		repo:            repo,
 		consumer:        consumer,
-		usersFsmManager: usersFsmManager,
+		usersFsmManager: fsm.NewUserManager(),
 		domain:          domain,
 		logger:          log,
 	}, nil
