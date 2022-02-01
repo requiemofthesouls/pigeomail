@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/emersion/go-smtp v0.15.0
+	github.com/getsentry/sentry-go v0.12.0
 	github.com/go-logr/logr v1.2.2
 	github.com/go-logr/zapr v1.2.2
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
@@ -11,6 +12,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/ilyakaznacheev/cleanenv v1.2.6
 	github.com/jhillyerd/enmime v0.9.2
+	github.com/smallstep/nosql v0.3.9
 	github.com/spf13/cobra v1.3.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0
@@ -44,9 +46,10 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect

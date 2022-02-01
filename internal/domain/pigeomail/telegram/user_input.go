@@ -2,11 +2,14 @@ package telegram
 
 import (
 	"context"
+	"log"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"pigeomail/internal/domain/pigeomail"
+	customerrors "pigeomail/internal/errors"
 )
 
 func (b *Bot) handleUserInput(update *tgbotapi.Update) {
@@ -16,7 +19,12 @@ func (b *Bot) handleUserInput(update *tgbotapi.Update) {
 	var state pigeomail.UserState
 	var err error
 	if state, err = b.svc.GetUserState(ctx, update.Message.Chat.ID); err != nil {
-		b.handleError(err, update.Message.Chat.ID)
+		sentry.CaptureMessage("test123")
+		if err != customerrors.ErrNotFound {
+			log.Println("error: " + err.Error())
+			sentry.CaptureException(err)
+			b.handleError(err, update.Message.Chat.ID)
+		}
 		return
 	}
 

@@ -12,19 +12,19 @@ Step 1: Take a copy of your config from default config (in .deploy folder)
 
 ``` cp config.dev.yaml config.yaml ```
 
-Step 2: Up the required containers( docker-compose located in .deploy folder)
-
-``` docker-compose.yml up ```
-
-Step 3: Generate token from telegram by creating a bot, using @BotFather (https://t.me/botfather)
+Step 2: Generate token from telegram by creating a bot, using @BotFather (https://t.me/botfather) and use this token in the config.yaml file, under ```telegram.token```
 
 https://docs.microsoft.com/en-us/azure/bot-service/bot-service-channel-connect-telegram?view=azure-bot-service-4.0 
+
+Step 3: Up the required containers (docker-compose located in .deploy folder)
+
+``` docker-compose up ```
 
 Step 4: Build the project
 
 ``` go build -o pigeomail main.go ```
 
-Step 5: launch the services: We have two services receiver( to get incoming mail) and tg_bot (to interact with telegram bot API)
+Step 5: launch the services: We have two services - receiver (to get incoming mail) and tg_bot (to interact with telegram bot API)
 
 ``` ./pigeomail receiver -c .deploy/config.yaml ```
 

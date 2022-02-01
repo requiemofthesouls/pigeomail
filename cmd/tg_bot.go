@@ -16,6 +16,7 @@ import (
 	"pigeomail/pkg/client/mongodb"
 	rmq "pigeomail/pkg/client/rabbitmq"
 	"pigeomail/pkg/logger"
+	"pigeomail/pkg/monitoring"
 )
 
 // tgBotCmd represents the tgBot command
@@ -72,6 +73,8 @@ var tgBotCmd = &cobra.Command{
 		); err != nil {
 			return err
 		}
+
+		monitoring.InitSentry(cfg.Sentry.DSN)
 
 		bot.Run()
 		return nil

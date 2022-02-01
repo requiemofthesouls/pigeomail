@@ -42,6 +42,10 @@ type Config struct {
 	Rabbit struct {
 		DSN string `yaml:"dsn" env-required:"true"`
 	} `yaml:"rabbitmq"`
+
+	Sentry struct {
+		DSN string `yaml:"dsn" env-required:"true"`
+	} `yaml:"sentry"`
 }
 
 var instance *Config

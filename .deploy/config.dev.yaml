@@ -21,11 +21,14 @@ telegram:
     key: ".deploy/cert.key"
 
 rabbitmq:
-  dsn: "amqp://guest:guest@rabbitmq:5672/"
+  dsn: "amqp://guest:guest@localhost:5672/"
 
 database:
-  host: "mongo"
+  host: "localhost"
   port: 27017
   username: "root"
   password: "example"
   db_name: "example"
+
+sentry:
+  dsn: "sentry_dsn"
