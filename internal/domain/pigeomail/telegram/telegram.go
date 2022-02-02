@@ -28,7 +28,7 @@ type Bot struct {
 	consumer        rabbitmq.Consumer
 	domain          string
 	logger          *logr.Logger
-	usersFsmManager fsm.UsersManager
+	usersFsmManager *fsm.UsersManager
 }
 
 func getWebhookUpdatesChan(
@@ -137,12 +137,13 @@ func NewBot(
 	}
 
 	return &Bot{
-		api:      tgAPI,
-		updates:  updates,
-		svc:      svc,
-		consumer: cons,
-		domain:   domain,
-		logger:   log,
+		api:             tgAPI,
+		updates:         updates,
+		svc:             svc,
+		consumer:        cons,
+		domain:          domain,
+		logger:          log,
+		usersFsmManager: fsm.NewUserManager(),
 	}, nil
 }
 
