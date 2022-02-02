@@ -1,29 +1,17 @@
 package telegram
 
 import (
-	"context"
-	"time"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-
-	"pigeomail/internal/domain/pigeomail"
+	"pigeomail/internal/fsm"
 )
 
 func (b *Bot) handleUserInput(update *tgbotapi.Update) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	var state = b.usersFsmManager.GetState(update.Message.Chat.ID)
 
-	var state pigeomail.UserState
-	var err error
-	if state, err = b.svc.GetUserState(ctx, update.Message.Chat.ID); err != nil {
-		b.handleError(err, update.Message.Chat.ID)
-		return
-	}
-
-	switch state.State {
-	case pigeomail.StateCreateEmailStep1:
+	switch state {
+	case fsm.ChoosingEmail:
 		b.handleCreateCommandStep2(update)
-	case pigeomail.StateDeleteEmailStep1:
+	case fsm.DeletingEmail:
 		b.handleDeleteCommandStep2(update)
 	}
 }

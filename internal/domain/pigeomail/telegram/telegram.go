@@ -13,6 +13,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 	"github.com/streadway/amqp"
+	"pigeomail/internal/fsm"
 
 	"pigeomail/internal/adapters/rabbitmq"
 	"pigeomail/internal/domain/pigeomail"
@@ -21,12 +22,13 @@ import (
 )
 
 type Bot struct {
-	api      *tgbotapi.BotAPI
-	updates  tgbotapi.UpdatesChannel
-	svc      pigeomail.Service
-	consumer rabbitmq.Consumer
-	domain   string
-	logger   *logr.Logger
+	api             *tgbotapi.BotAPI
+	updates         tgbotapi.UpdatesChannel
+	svc             pigeomail.Service
+	consumer        rabbitmq.Consumer
+	domain          string
+	logger          *logr.Logger
+	usersFsmManager fsm.UsersManager
 }
 
 func getWebhookUpdatesChan(

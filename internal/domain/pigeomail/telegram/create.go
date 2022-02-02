@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"pigeomail/internal/fsm"
 
 	"pigeomail/internal/domain/pigeomail"
 )
@@ -22,6 +23,8 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
+
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.CreateEmail)
 
 	msg.Text = "enter your mailbox name without domain"
 	_, _ = b.api.Send(msg)
@@ -42,6 +45,8 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
+
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.ChooseEmail)
 
 	msg.Text = fmt.Sprintf("email <%s> has been created successfully", update.Message.Text+"@"+b.domain)
 	_, _ = b.api.Send(msg)

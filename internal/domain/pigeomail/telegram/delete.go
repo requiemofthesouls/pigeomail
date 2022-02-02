@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"pigeomail/internal/fsm"
 
 	"pigeomail/internal/domain/pigeomail"
 )
@@ -25,6 +26,8 @@ func (b *Bot) handleDeleteCommandStep1(update *tgbotapi.Update) {
 		return
 	}
 
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.DeleteEmail)
+
 	msg.Text = fmt.Sprintf("type 'yes' if you want to delete your email: <%s>", email.Name)
 	_, _ = b.api.Send(msg)
 }
@@ -42,6 +45,8 @@ func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 			return
 		}
 
+		b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.Cancel)
+
 		_, _ = b.api.Send(msg)
 		return
 	}
@@ -50,6 +55,8 @@ func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
+
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.ConfirmDeletion)
 
 	msg.Text = "email has been deleted successfully"
 	_, _ = b.api.Send(msg)
