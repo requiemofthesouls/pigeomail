@@ -6,7 +6,7 @@ type (
 	State int
 	Event int
 
-	// FSM simple fsm, doesn't keep state, instead of it receives current state and event to get new state
+	// FSM simple stateless fsm
 	FSM interface {
 		SendEvent(currentState State, event Event) (newState State, err error)
 	}
