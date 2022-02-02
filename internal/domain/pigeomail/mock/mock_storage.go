@@ -6,107 +6,35 @@ package mocks
 
 import (
 	context "context"
+	gomock "github.com/golang/mock/gomock"
 	pigeomail "pigeomail/internal/domain/pigeomail"
 	reflect "reflect"
-
-	gomock "github.com/golang/mock/gomock"
 )
 
-// MockStorage is a mock of Storage interface.
+// MockStorage is a mock of Storage interface
 type MockStorage struct {
 	ctrl     *gomock.Controller
 	recorder *MockStorageMockRecorder
 }
 
-// MockStorageMockRecorder is the mock recorder for MockStorage.
+// MockStorageMockRecorder is the mock recorder for MockStorage
 type MockStorageMockRecorder struct {
 	mock *MockStorage
 }
 
-// NewMockStorage creates a new mock instance.
+// NewMockStorage creates a new mock instance
 func NewMockStorage(ctrl *gomock.Controller) *MockStorage {
 	mock := &MockStorage{ctrl: ctrl}
 	mock.recorder = &MockStorageMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockStorage) EXPECT() *MockStorageMockRecorder {
 	return m.recorder
 }
 
-// CreateEmail mocks base method.
-func (m *MockStorage) CreateEmail(ctx context.Context, email pigeomail.EMail) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateEmail", ctx, email)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreateEmail indicates an expected call of CreateEmail.
-func (mr *MockStorageMockRecorder) CreateEmail(ctx, email interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEmail", reflect.TypeOf((*MockStorage)(nil).CreateEmail), ctx, email)
-}
-
-// CreateUserState mocks base method.
-func (m *MockStorage) CreateUserState(ctx context.Context, state pigeomail.UserState) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUserState", ctx, state)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreateUserState indicates an expected call of CreateUserState.
-func (mr *MockStorageMockRecorder) CreateUserState(ctx, state interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserState", reflect.TypeOf((*MockStorage)(nil).CreateUserState), ctx, state)
-}
-
-// DeleteEmail mocks base method.
-func (m *MockStorage) DeleteEmail(ctx context.Context, chatID int64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteEmail", ctx, chatID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteEmail indicates an expected call of DeleteEmail.
-func (mr *MockStorageMockRecorder) DeleteEmail(ctx, chatID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEmail", reflect.TypeOf((*MockStorage)(nil).DeleteEmail), ctx, chatID)
-}
-
-// DeleteUserState mocks base method.
-func (m *MockStorage) DeleteUserState(ctx context.Context, state pigeomail.UserState) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUserState", ctx, state)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteUserState indicates an expected call of DeleteUserState.
-func (mr *MockStorageMockRecorder) DeleteUserState(ctx, state interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserState", reflect.TypeOf((*MockStorage)(nil).DeleteUserState), ctx, state)
-}
-
-// GetChatIDByEmail mocks base method.
-func (m *MockStorage) GetChatIDByEmail(ctx context.Context, email string) (int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChatIDByEmail", ctx, email)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetChatIDByEmail indicates an expected call of GetChatIDByEmail.
-func (mr *MockStorageMockRecorder) GetChatIDByEmail(ctx, email interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChatIDByEmail", reflect.TypeOf((*MockStorage)(nil).GetChatIDByEmail), ctx, email)
-}
-
-// GetEmailByChatID mocks base method.
+// GetEmailByChatID mocks base method
 func (m *MockStorage) GetEmailByChatID(ctx context.Context, chatID int64) (pigeomail.EMail, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEmailByChatID", ctx, chatID)
@@ -115,13 +43,28 @@ func (m *MockStorage) GetEmailByChatID(ctx context.Context, chatID int64) (pigeo
 	return ret0, ret1
 }
 
-// GetEmailByChatID indicates an expected call of GetEmailByChatID.
+// GetEmailByChatID indicates an expected call of GetEmailByChatID
 func (mr *MockStorageMockRecorder) GetEmailByChatID(ctx, chatID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmailByChatID", reflect.TypeOf((*MockStorage)(nil).GetEmailByChatID), ctx, chatID)
 }
 
-// GetEmailByName mocks base method.
+// GetChatIDByEmail mocks base method
+func (m *MockStorage) GetChatIDByEmail(ctx context.Context, email string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetChatIDByEmail", ctx, email)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetChatIDByEmail indicates an expected call of GetChatIDByEmail
+func (mr *MockStorageMockRecorder) GetChatIDByEmail(ctx, email interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChatIDByEmail", reflect.TypeOf((*MockStorage)(nil).GetChatIDByEmail), ctx, email)
+}
+
+// GetEmailByName mocks base method
 func (m *MockStorage) GetEmailByName(ctx context.Context, name string) (pigeomail.EMail, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEmailByName", ctx, name)
@@ -130,23 +73,36 @@ func (m *MockStorage) GetEmailByName(ctx context.Context, name string) (pigeomai
 	return ret0, ret1
 }
 
-// GetEmailByName indicates an expected call of GetEmailByName.
+// GetEmailByName indicates an expected call of GetEmailByName
 func (mr *MockStorageMockRecorder) GetEmailByName(ctx, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmailByName", reflect.TypeOf((*MockStorage)(nil).GetEmailByName), ctx, name)
 }
 
-// GetUserState mocks base method.
-func (m *MockStorage) GetUserState(ctx context.Context, chatID int64) (pigeomail.UserState, error) {
+// CreateEmail mocks base method
+func (m *MockStorage) CreateEmail(ctx context.Context, email pigeomail.EMail) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserState", ctx, chatID)
-	ret0, _ := ret[0].(pigeomail.UserState)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "CreateEmail", ctx, email)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// GetUserState indicates an expected call of GetUserState.
-func (mr *MockStorageMockRecorder) GetUserState(ctx, chatID interface{}) *gomock.Call {
+// CreateEmail indicates an expected call of CreateEmail
+func (mr *MockStorageMockRecorder) CreateEmail(ctx, email interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserState", reflect.TypeOf((*MockStorage)(nil).GetUserState), ctx, chatID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEmail", reflect.TypeOf((*MockStorage)(nil).CreateEmail), ctx, email)
+}
+
+// DeleteEmail mocks base method
+func (m *MockStorage) DeleteEmail(ctx context.Context, chatID int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteEmail", ctx, chatID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteEmail indicates an expected call of DeleteEmail
+func (mr *MockStorageMockRecorder) DeleteEmail(ctx, chatID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEmail", reflect.TypeOf((*MockStorage)(nil).DeleteEmail), ctx, chatID)
 }

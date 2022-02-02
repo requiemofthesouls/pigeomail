@@ -19,14 +19,3 @@ func (e *EMail) Validate() (err error) {
 
 	return nil
 }
-
-type UserState struct {
-	ID     string `bson:"_id,omitempty"`
-	ChatID int64  `json:"chat_id" bson:"chat_id"`
-	State  state  `json:"state" bson:"state"`
-}
-
-type state string
-
-const StateCreateEmailStep1 state = "create_email_step_1"
-const StateDeleteEmailStep1 state = "delete_email_step_1"
