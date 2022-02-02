@@ -5,16 +5,16 @@ import "sync"
 // User states
 const (
 	Idle State = iota
-	ChoosingEmail
+	CreatingEmail
 	DeletingEmail
 )
 
 // User events
 const (
-	CreateEmail Event = iota
-	ChooseEmail
-	DeleteEmail
-	ConfirmDeletion
+	StartCreatingEmail Event = iota
+	FinishCreatingEmail
+	StartDeletingEmail
+	FinishDeletingEmail
 	Cancel
 )
 
@@ -22,16 +22,16 @@ var (
 	// UsersFsm transitions of states for users
 	UsersFsm = NewFSM(Transitions{
 		Idle: {
-			CreateEmail: ChoosingEmail,
-			DeleteEmail: DeletingEmail,
+			StartCreatingEmail: CreatingEmail,
+			StartDeletingEmail: DeletingEmail,
 		},
-		ChoosingEmail: {
-			ChooseEmail: Idle,
-			Cancel:      Idle,
+		CreatingEmail: {
+			FinishCreatingEmail: Idle,
+			Cancel:              Idle,
 		},
 		DeletingEmail: {
-			ConfirmDeletion: Idle,
-			Cancel:          Idle,
+			FinishDeletingEmail: Idle,
+			Cancel:              Idle,
 		},
 	})
 )

@@ -24,7 +24,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 		return
 	}
 
-	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.CreateEmail)
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.StartCreatingEmail)
 
 	msg.Text = "enter your mailbox name without domain"
 	_, _ = b.api.Send(msg)
@@ -46,7 +46,7 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 		return
 	}
 
-	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.ChooseEmail)
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.FinishCreatingEmail)
 
 	msg.Text = fmt.Sprintf("email <%s> has been created successfully", update.Message.Text+"@"+b.domain)
 	_, _ = b.api.Send(msg)

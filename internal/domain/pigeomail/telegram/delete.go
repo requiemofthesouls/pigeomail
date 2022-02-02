@@ -26,7 +26,7 @@ func (b *Bot) handleDeleteCommandStep1(update *tgbotapi.Update) {
 		return
 	}
 
-	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.DeleteEmail)
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.StartDeletingEmail)
 
 	msg.Text = fmt.Sprintf("type 'yes' if you want to delete your email: <%s>", email.Name)
 	_, _ = b.api.Send(msg)
@@ -56,7 +56,7 @@ func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 		return
 	}
 
-	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.ConfirmDeletion)
+	b.usersFsmManager.SendEvent(update.Message.Chat.ID, fsm.FinishDeletingEmail)
 
 	msg.Text = "email has been deleted successfully"
 	_, _ = b.api.Send(msg)
