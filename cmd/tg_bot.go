@@ -1,14 +1,21 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"pigeomail/database"
-	"pigeomail/internal/repository"
-	"pigeomail/internal/smtp_server"
-	"pigeomail/internal/telegram"
-	"pigeomail/logger"
-	"pigeomail/rabbitmq"
+	"github.com/streadway/amqp"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	storage "pigeomail/internal/adapters/db/pigeomail"
+	"pigeomail/internal/adapters/rabbitmq"
+	"pigeomail/internal/adapters/rabbitmq/consumer"
+	"pigeomail/internal/config"
+	"pigeomail/internal/domain/pigeomail"
+	"pigeomail/internal/domain/pigeomail/telegram"
+	"pigeomail/pkg/client/mongodb"
+	rmq "pigeomail/pkg/client/rabbitmq"
+	"pigeomail/pkg/logger"
 )
 
 // tgBotCmd represents the tgBot command
@@ -17,40 +24,51 @@ var tgBotCmd = &cobra.Command{
 	Short: "Telegram bot which handles user input",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var tgCfg *telegram.Config
-		if err = viper.UnmarshalKey("telegram", &tgCfg); err != nil {
+		var l = logger.GetLogger()
+		l.Info("building tg_bot")
+
+		var cfg = config.GetConfig()
+
+		ctx := context.Background()
+
+		var db *mongo.Database
+		if db, err = mongodb.NewClient(
+			ctx,
+			cfg.Database.Host,
+			cfg.Database.Port,
+			cfg.Database.Username,
+			cfg.Database.Password,
+			cfg.Database.DBName,
+			"",
+		); err != nil {
 			return err
 		}
 
-		var dbCfg *database.Config
-		if err = viper.UnmarshalKey("database", &dbCfg); err != nil {
+		var s = storage.NewStorage(db)
+		var svc = pigeomail.NewService(s)
+
+		var conn *amqp.Connection
+		if conn, err = rmq.NewConnection(cfg.Rabbit.DSN); err != nil {
 			return err
 		}
 
-		var repo repository.IEmailRepository
-		if repo, err = repository.NewMongoRepository(dbCfg); err != nil {
+		var cons rabbitmq.Consumer
+		if cons, err = consumer.NewConsumer(conn); err != nil {
 			return err
 		}
-
-		var rmqCfg *rabbitmq.Config
-		if err = viper.UnmarshalKey("rabbitmq", &rmqCfg); err != nil {
-			return err
-		}
-
-		var smtpCfg *smtp_server.Config
-		if err = viper.UnmarshalKey("smtp.server", &smtpCfg); err != nil {
-			return err
-		}
-
-		var log = logger.New()
 
 		var bot *telegram.Bot
-		if bot, err = telegram.NewTGBot(
-			tgCfg,
-			rmqCfg,
-			repo,
-			smtpCfg.Domain,
-			log,
+		if bot, err = telegram.NewBot(
+			ctx,
+			cfg.Debug,
+			cfg.Telegram.Webhook.Enabled,
+			cfg.Telegram.Token,
+			cfg.SMTP.Server.Domain,
+			cfg.Telegram.Webhook.Port,
+			cfg.Telegram.Webhook.Cert,
+			cfg.Telegram.Webhook.Key,
+			svc,
+			cons,
 		); err != nil {
 			return err
 		}
@@ -62,14 +80,4 @@ var tgBotCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(tgBotCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// tgBotCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// tgBotCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

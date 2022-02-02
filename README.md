@@ -1,9 +1,10 @@
+[![codecov](https://codecov.io/gh/requiemofthesouls/pigeomail/branch/master/graph/badge.svg)](https://codecov.io/gh/requiemofthesouls/pigeomail)
 # Pigeomail
 
 - Service which provides securely personal email addresses written in pure Go.
 - Using this service, through our telegram bot, one can create an email, receive incoming emails.
-- Currently you can only recieve emails, but in future we will add sending emails via the bot as well
-- We don't store the emails in the server, but we will keep them in rmq until the user opens the bot to receive those emails.
+- Currently, you can only receive emails, but in future we will add sending emails via the bot as well.
+- We don't store the emails on the server, messages sends directly in your telegram, check out my source code. 
 
 # Setting up the project locally:
 

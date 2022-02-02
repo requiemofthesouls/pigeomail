@@ -1,14 +1,21 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"pigeomail/database"
-	"pigeomail/internal/repository"
-	"pigeomail/logger"
-	"pigeomail/rabbitmq"
+	"context"
 
-	"pigeomail/internal/smtp_server"
+	"github.com/emersion/go-smtp"
+	"github.com/spf13/cobra"
+	"github.com/streadway/amqp"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	storage "pigeomail/internal/adapters/db/pigeomail"
+	"pigeomail/internal/adapters/rabbitmq"
+	"pigeomail/internal/adapters/rabbitmq/publisher"
+	"pigeomail/internal/config"
+	"pigeomail/internal/domain/pigeomail/receiver"
+	"pigeomail/pkg/client/mongodb"
+	rmq "pigeomail/pkg/client/rabbitmq"
+	"pigeomail/pkg/logger"
 )
 
 // receiverCmd represents the receiver command
@@ -16,49 +23,62 @@ var receiverCmd = &cobra.Command{
 	Use:   "receiver",
 	Short: "SMTP server which listens incoming messages and puts them into message queue",
 
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var err error
-		var rmqCfg *rabbitmq.Config
-		if err = viper.UnmarshalKey("rabbitmq", &rmqCfg); err != nil {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		l := logger.GetLogger()
+		l.Info("building receiver")
+
+		var cfg = config.GetConfig()
+
+		ctx := context.Background()
+
+		var db *mongo.Database
+		if db, err = mongodb.NewClient(
+			ctx,
+			cfg.Database.Host,
+			cfg.Database.Port,
+			cfg.Database.Username,
+			cfg.Database.Password,
+			cfg.Database.DBName,
+			"",
+		); err != nil {
 			return err
 		}
 
-		var smtpCfg *smtp_server.Config
-		if err = viper.UnmarshalKey("smtp.server", &smtpCfg); err != nil {
+		var s = storage.NewStorage(db)
+
+		var rmqConn *amqp.Connection
+		if rmqConn, err = rmq.NewConnection(cfg.Rabbit.DSN); err != nil {
 			return err
 		}
 
-		var dbCfg *database.Config
-		if err = viper.UnmarshalKey("database", &dbCfg); err != nil {
+		var pub rabbitmq.Publisher
+		if pub, err = publisher.NewPublisher(rmqConn); err != nil {
 			return err
 		}
 
-		var repo repository.IEmailRepository
-		if repo, err = repository.NewMongoRepository(dbCfg); err != nil {
+		var backend smtp.Backend
+		if backend, err = receiver.NewBackend(s, pub); err != nil {
 			return err
 		}
 
-		var log = logger.New()
-
-		var receiver *smtp_server.Receiver
-		if receiver, err = smtp_server.NewSMTPReceiver(rmqCfg, smtpCfg, repo, log); err != nil {
+		var r *receiver.Receiver
+		if r, err = receiver.NewSMTPReceiver(
+			backend,
+			cfg.SMTP.Server.Addr,
+			cfg.SMTP.Server.Domain,
+			cfg.SMTP.Server.ReadTimeout,
+			cfg.SMTP.Server.WriteTimeout,
+			cfg.SMTP.Server.MaxMessageBytes,
+			cfg.SMTP.Server.MaxRecipients,
+			cfg.SMTP.Server.AllowInsecureAuth,
+		); err != nil {
 			return err
 		}
 
-		return receiver.Run()
+		return r.Run()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(receiverCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// receiverCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// receiverCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
