@@ -1,12 +1,23 @@
-[![codecov](https://codecov.io/gh/requiemofthesouls/pigeomail/branch/master/graph/badge.svg)](https://codecov.io/gh/requiemofthesouls/pigeomail)
-# Pigeomail
+<p align="center">
+      <img src="https://i.ibb.co/sPYGXGK/photo-2022-11-22-13-05-41.jpg" width="400">
+</p>
+
+<p align="center">
+   <img src="https://img.shields.io/github/go-mod/go-version/requiemofthesouls/pigeomail" alt="Go version">
+   <img src="https://img.shields.io/github/last-commit/requiemofthesouls/pigeomail" alt=Last commit">
+   <img src="https://img.shields.io/github/license/requiemofthesouls/pigeomail" alt="License">
+</p>
+
+## About
 
 - Service which provides securely personal email addresses written in pure Go.
 - Using this service, through our telegram bot, one can create an email, receive incoming emails.
 - Currently, you can only receive emails, but in future we will add sending emails via the bot as well.
 - We don't store the emails on the server, messages sends directly in your telegram, check out my source code. 
 
-# Setting up the project locally:
+## Documentation
+
+### Setting up the project locally:
 
 Step 1: Take a copy of your config from default config (in .deploy folder)
 
@@ -30,5 +41,9 @@ Step 5: launch the services: We have two services receiver( to get incoming mail
 
 ``` ./pigeomail tg_bot -c .deploy/config.yaml ```
 
-## Scheme
-![](./docs/images/pigeomail.drawio.png)
+
+## Developers
+
+- [Arv](https://github.com/arvryna)
+- [Konstantin](https://github.com/requiemofthesouls)
+
