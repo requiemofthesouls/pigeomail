@@ -1,10 +1,13 @@
-//go:generate mockgen -package=mocks -destination=mock/mock_service.go -source=service.go
 package pigeomail
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
 	customerrors "pigeomail/internal/errors"
+
+	"github.com/looplab/fsm"
 )
 
 type Service interface {
@@ -12,28 +15,51 @@ type Service interface {
 	CreateEmail(ctx context.Context, email EMail) error
 	GetChatIDByEmail(ctx context.Context, email string) (chatID int64, err error)
 	GetEmailByChatID(ctx context.Context, chatID int64) (email EMail, err error)
-	GetUserState(ctx context.Context, chatID int64) (userState UserState, err error)
+	GetUserState(ctx context.Context, chatID int64) (userState string, ok bool)
 
 	PrepareDeleteEmail(ctx context.Context, chatID int64) (email EMail, err error)
 	CancelDeleteEmail(ctx context.Context, chatID int64) error
 	DeleteEmail(ctx context.Context, chatID int64) error
 }
 
-type service struct {
-	storage Storage
+// Создаем структуру, которая объединяет карту и мьютекс
+type FSMMap struct {
+	mu sync.Mutex
+	m  map[int64]*fsm.FSM
 }
 
-func (s *service) GetEmailByChatID(ctx context.Context, chatID int64) (email EMail, err error) {
-	email, err = s.storage.GetEmailByChatID(ctx, chatID)
-	if err != nil && err == customerrors.ErrNotFound {
-		return email, customerrors.NewTelegramError("email not found, /create a new one")
+func NewFSMMap() *FSMMap {
+	return &FSMMap{
+		m: make(map[int64]*fsm.FSM),
 	}
+}
 
-	return email, err
+func (fsmMap *FSMMap) Add(key int64, fsm *fsm.FSM) {
+	fsmMap.mu.Lock()
+	defer fsmMap.mu.Unlock()
+	fsmMap.m[key] = fsm
+}
+
+func (fsmMap *FSMMap) Get(key int64) (*fsm.FSM, bool) {
+	fsmMap.mu.Lock()
+	defer fsmMap.mu.Unlock()
+	val, ok := fsmMap.m[key]
+	return val, ok
+}
+
+func (fsmMap *FSMMap) Delete(key int64) {
+	fsmMap.mu.Lock()
+	defer fsmMap.mu.Unlock()
+	delete(fsmMap.m, key)
+}
+
+type service struct {
+	storage Storage
+	state   *FSMMap
 }
 
 func NewService(storage Storage) Service {
-	return &service{storage: storage}
+	return &service{storage: storage, state: NewFSMMap()}
 }
 
 func (s *service) PrepareCreateEmail(ctx context.Context, chatID int64) (err error) {
@@ -47,65 +73,18 @@ func (s *service) PrepareCreateEmail(ctx context.Context, chatID int64) (err err
 		return customerrors.NewTelegramError("email already created: " + email.Name)
 	}
 
-	var userState = UserState{
-		ChatID: chatID,
-		State:  StateCreateEmailStep1,
-	}
-
-	if err = s.storage.CreateUserState(ctx, userState); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *service) PrepareDeleteEmail(ctx context.Context, chatID int64) (email EMail, err error) {
-	if email, err = s.storage.GetEmailByChatID(ctx, chatID); err != nil {
-		if err == customerrors.ErrNotFound {
-			return email, customerrors.NewTelegramError("there's no created email, use /create")
-		}
-
-		return email, err
-	}
-
-	var userState = UserState{
-		ChatID: chatID,
-		State:  StateDeleteEmailStep1,
-	}
-
-	if err = s.storage.CreateUserState(ctx, userState); err != nil {
-		return email, err
-	}
-
-	return email, nil
-}
-
-func (s *service) CancelDeleteEmail(ctx context.Context, chatID int64) (err error) {
-	var userState = UserState{
-		ChatID: chatID,
-		State:  StateDeleteEmailStep1,
-	}
-
-	if err = s.storage.DeleteUserState(ctx, userState); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *service) DeleteEmail(ctx context.Context, chatID int64) (err error) {
-	if err = s.storage.DeleteEmail(ctx, chatID); err != nil {
-		return err
-	}
-
-	var userState = UserState{
-		ChatID: chatID,
-		State:  StateDeleteEmailStep1,
-	}
-
-	if err = s.storage.DeleteUserState(ctx, userState); err != nil {
-		return err
-	}
+	s.state.Add(chatID,
+		fsm.NewFSM(
+			StateRequestedCreateEmail,
+			fsm.Events{
+				{
+					Name: StateCreateEmail,
+					Src:  []string{StateRequestedCreateEmail},
+					Dst:  StateEmailCreated,
+				},
+			},
+			fsm.Callbacks{},
+		))
 
 	return nil
 }
@@ -124,18 +103,21 @@ func (s *service) CreateEmail(ctx context.Context, email EMail) (err error) {
 		return customerrors.NewTelegramError("email <" + email.Name + "> already exists, please choose a new one")
 	}
 
+	var state *fsm.FSM
+	var ok bool
+	if state, ok = s.state.Get(email.ChatID); !ok {
+		return customerrors.NewTelegramError("create email not requested, use /create")
+	}
+
+	if err = state.Event(ctx, StateCreateEmail); err != nil {
+		return customerrors.NewTelegramError(fmt.Errorf("create email: %w", err).Error())
+	}
+
 	if err = s.storage.CreateEmail(ctx, email); err != nil {
 		return err
 	}
 
-	var userState = UserState{
-		ChatID: email.ChatID,
-		State:  StateCreateEmailStep1,
-	}
-
-	if err = s.storage.DeleteUserState(ctx, userState); err != nil {
-		return err
-	}
+	s.state.Delete(email.ChatID)
 
 	return nil
 }
@@ -144,6 +126,86 @@ func (s *service) GetChatIDByEmail(ctx context.Context, email string) (chatID in
 	return s.storage.GetChatIDByEmail(ctx, email)
 }
 
-func (s *service) GetUserState(ctx context.Context, chatID int64) (userState UserState, err error) {
-	return s.storage.GetUserState(ctx, chatID)
+func (s *service) GetEmailByChatID(ctx context.Context, chatID int64) (email EMail, err error) {
+	email, err = s.storage.GetEmailByChatID(ctx, chatID)
+	if err != nil && err == customerrors.ErrNotFound {
+		return email, customerrors.NewTelegramError("email not found, /create a new one")
+	}
+
+	return email, err
+}
+
+func (s *service) GetUserState(ctx context.Context, chatID int64) (userState string, ok bool) {
+	var state *fsm.FSM
+	if state, ok = s.state.Get(chatID); !ok {
+		return "", false
+	}
+
+	return state.Current(), true
+}
+
+func (s *service) PrepareDeleteEmail(ctx context.Context, chatID int64) (email EMail, err error) {
+	if email, err = s.storage.GetEmailByChatID(ctx, chatID); err != nil {
+		if err == customerrors.ErrNotFound {
+			return email, customerrors.NewTelegramError("there's no created email, use /create")
+		}
+
+		return email, err
+	}
+
+	s.state.Add(chatID,
+		fsm.NewFSM(
+			StateRequestedDeleteEmail,
+			fsm.Events{
+				{
+					Name: StateDeleteEmail,
+					Src:  []string{StateRequestedDeleteEmail},
+					Dst:  StateEmailDeleted,
+				},
+				{
+					Name: StateCancelDeleteEmail,
+					Src:  []string{StateRequestedDeleteEmail},
+					Dst:  StateDeleteEmailCancelled,
+				},
+			},
+			fsm.Callbacks{},
+		))
+
+	return email, nil
+}
+
+func (s *service) CancelDeleteEmail(ctx context.Context, chatID int64) (err error) {
+	var state *fsm.FSM
+	var ok bool
+	if state, ok = s.state.Get(chatID); !ok {
+		return customerrors.NewTelegramError("delete email not requested, use /delete")
+	}
+
+	if err = state.Event(ctx, StateCancelDeleteEmail); err != nil {
+		return customerrors.NewTelegramError(fmt.Errorf("cancel delete email: %w", err).Error())
+	}
+
+	s.state.Delete(chatID)
+
+	return nil
+}
+
+func (s *service) DeleteEmail(ctx context.Context, chatID int64) (err error) {
+	var state *fsm.FSM
+	var ok bool
+	if state, ok = s.state.Get(chatID); !ok {
+		return customerrors.NewTelegramError("delete email not requested, use /delete")
+	}
+
+	if err = state.Event(ctx, StateDeleteEmail); err != nil {
+		return customerrors.NewTelegramError(fmt.Errorf("delete email: %w", err).Error())
+	}
+
+	if err = s.storage.DeleteEmail(ctx, chatID); err != nil {
+		return err
+	}
+
+	s.state.Delete(chatID)
+
+	return nil
 }
