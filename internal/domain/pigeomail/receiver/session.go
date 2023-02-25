@@ -37,9 +37,13 @@ type email struct {
 	HTML        string
 }
 
+func (s *session) AuthPlain(username, password string) error {
+	return nil
+}
+
 var ErrMailNotDelivered = errors.New("mail not delivered")
 
-func (s *session) Mail(from string, opts smtp.MailOptions) error {
+func (s *session) Mail(from string, opts *smtp.MailOptions) error {
 	s.logger.V(10).Info("mail from:", "email", from)
 	return nil
 }

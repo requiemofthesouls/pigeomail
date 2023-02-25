@@ -25,7 +25,7 @@
 
 2. Up the required containers( docker-compose located in .deploy folder)
 
-      ``` docker-compose.yml up ```
+      ``` docker-compose -f .deploy/... up ```
 
 3. Generate token from telegram by creating a bot, using [@BotFather](https://t.me/botfather)  
 
