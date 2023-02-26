@@ -12,7 +12,7 @@ const MessageReceivedQueueName = "h.pigeomail.MessageReceived"
 
 type (
 	Publisher interface {
-		Publish(queue string, msg *amqp.Publishing) error
+		Publish(queue string, msg amqp.Publishing) error
 	}
 	publisher struct {
 		rmq rmqDef.Wrapper
@@ -27,7 +27,7 @@ func NewPublisher(rmq rmqDef.Wrapper, l logDef.Wrapper) Publisher {
 	}
 }
 
-func (p *publisher) Publish(queue string, msg *amqp.Publishing) (err error) {
+func (p *publisher) Publish(queue string, msg amqp.Publishing) (err error) {
 	var l = p.l.With(zap.String("queue", queue))
 	l.Debug("declaring queue")
 	if _, err = p.rmq.QueueDeclare(

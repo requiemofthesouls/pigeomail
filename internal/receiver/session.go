@@ -108,7 +108,7 @@ func (s *session) Data(r io.Reader) (err error) {
 		return ErrMailNotDelivered
 	}
 
-	var msg = &amqp.Publishing{
+	var msg = amqp.Publishing{
 		Headers: amqp.Table{
 			"from":    parsedEmail.From,
 			"to":      parsedEmail.To,
