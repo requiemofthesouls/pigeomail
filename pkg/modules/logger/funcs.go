@@ -4,7 +4,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func String(key string, val string) Field {
+func String(key, val string) Field {
 	return zap.String(key, val)
 }
 

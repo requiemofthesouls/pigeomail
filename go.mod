@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	github.com/emersion/go-smtp v0.16.0
-	github.com/go-logr/logr v1.2.3
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/google/uuid v1.1.2
 	github.com/jackc/pgx/v5 v5.3.0

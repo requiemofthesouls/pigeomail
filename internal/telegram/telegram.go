@@ -64,13 +64,12 @@ func getWebhookUpdatesChan(
 	updates = tgAPI.ListenForWebhook("/" + tgAPI.Token)
 
 	go func() {
-		err = http.ListenAndServeTLS(
-			fmt.Sprintf("0.0.0.0:%d", cfg.Port),
-			cfg.Cert,
-			cfg.Key,
-			nil,
-		)
-		if err != nil {
+		server := &http.Server{
+			Addr:              fmt.Sprintf("0.0.0.0:%d", cfg.Port),
+			ReadHeaderTimeout: 3 * time.Second,
+		}
+
+		if err = server.ListenAndServe(); err != nil {
 			l.Error("error in http.ListenAndServeTLS", zap.Error(err))
 		}
 	}()
@@ -89,7 +88,7 @@ func getUpdatesChan(l logger.Wrapper, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.
 }
 
 func NewBot(
-	cfg Config,
+	cfg *Config,
 	l logger.Wrapper,
 	repo repository.EmailState,
 	cons rabbitmq.Consumer,

@@ -15,7 +15,6 @@ type Config struct {
 }
 
 func (c *Config) getClientOpts() *options.ClientOptions {
-
 	var dsn string
 	var anonymous bool
 	if c.Username == "" || c.Password == "" {

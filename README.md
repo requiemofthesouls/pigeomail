@@ -4,7 +4,7 @@
 
 <p align="center">
    <img src="https://img.shields.io/github/go-mod/go-version/requiemofthesouls/pigeomail" alt="Go version">
-   <img src="https://img.shields.io/github/last-commit/requiemofthesouls/pigeomail" alt=Last commit">
+   <img src="https://img.shields.io/github/last-commit/requiemofthesouls/pigeomail" alt="Last commit">
    <img src="https://img.shields.io/github/license/requiemofthesouls/pigeomail" alt="License">
 </p>
 
@@ -19,13 +19,13 @@
 
 ### Setting up the project locally:
 
-1. Take a copy of your config from default config (in .deploy folder)
+1. Take a copy of your config from default config (in configs folder)
 
       ``` cp config.dev.yaml config.yaml ```
 
-2. Up the required containers( docker-compose located in .deploy folder)
+2. Up the required containers( docker-compose located in build/package folder)
 
-      ``` docker-compose -f .deploy/... up ```
+      ``` docker compose -f build/package/docker-compose up ```
 
 3. Generate token from telegram by creating a bot, using [@BotFather](https://t.me/botfather)  
 
@@ -37,9 +37,9 @@
 
 5. launch the services: We have two services receiver( to get incoming mail) and tg_bot (to interact with telegram bot API)
 
-      ``` ./pigeomail receiver -c .deploy/config.yaml ```
+      ``` ./pigeomail receiver -c configs/config.yaml ```
 
-      ``` ./pigeomail tg_bot -c .deploy/config.yaml ```
+      ``` ./pigeomail tg_bot -c configs/config.yaml ```
 
 
 ## Developers

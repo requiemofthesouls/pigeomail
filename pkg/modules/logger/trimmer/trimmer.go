@@ -49,7 +49,7 @@ func (t *trimmer) Trim(handler string, text []byte) []byte {
 	}
 
 	for field, re := range regexps {
-		text = re.ReplaceAll(text, []byte(fmt.Sprintf(`"%s": "TRIMMED_CONTENT"`, field)))
+		text = re.ReplaceAll(text, []byte(fmt.Sprintf(`%q: "TRIMMED_CONTENT"`, field)))
 	}
 
 	return text

@@ -50,5 +50,5 @@ func initTGBot(cont container.Container) (_ interface{}, err error) {
 		return nil, err
 	}
 
-	return telegram.NewBot(tgConfig, l, repo, consumer)
+	return telegram.NewBot(&tgConfig, l, repo, consumer)
 }

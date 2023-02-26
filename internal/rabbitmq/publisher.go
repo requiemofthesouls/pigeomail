@@ -47,7 +47,7 @@ func (p *publisher) Publish(queue string, msg *amqp.Publishing) (err error) {
 		queue, // routing key
 		false, // mandatory
 		false, // immediate
-		*msg,
+		msg,
 	); err != nil {
 		return err
 	}

@@ -31,9 +31,9 @@ func New(ctx context.Context, cfg Config, l logDef.Wrapper) (_ Wrapper, err erro
 
 type (
 	Wrapper interface {
-		Consume(queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args amqp.Table) (<-chan amqp.Delivery, error)
-		QueueDeclare(name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args amqp.Table) (amqp.Queue, error)
-		Publish(exchange string, key string, mandatory bool, immediate bool, msg amqp.Publishing) error
+		Consume(queue, consumer string, autoAck, exclusive, noLocal, noWait bool, args *amqp.Table) (<-chan amqp.Delivery, error)
+		QueueDeclare(name string, durable, autoDelete, exclusive, noWait bool, args *amqp.Table) (amqp.Queue, error)
+		Publish(exchange string, key string, mandatory bool, immediate bool, msg *amqp.Publishing) error
 		CloseChannel() error
 		CloseConnection() error
 	}
@@ -44,16 +44,20 @@ type (
 	}
 )
 
-func (w *wrapper) QueueDeclare(name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args amqp.Table) (amqp.Queue, error) {
-	return w.ch.QueueDeclare(name, durable, autoDelete, exclusive, noWait, args)
+func (w *wrapper) QueueDeclare(name string, durable, autoDelete, exclusive, noWait bool, args *amqp.Table) (amqp.Queue, error) {
+	return w.ch.QueueDeclare(name, durable, autoDelete, exclusive, noWait, *args)
 }
 
-func (w *wrapper) Publish(exchange string, key string, mandatory bool, immediate bool, msg amqp.Publishing) error {
-	return w.ch.Publish(exchange, key, mandatory, immediate, msg)
+func (w *wrapper) Publish(exchange, key string, mandatory, immediate bool, msg *amqp.Publishing) error {
+	return w.ch.Publish(exchange, key, mandatory, immediate, *msg)
 }
 
-func (w *wrapper) Consume(queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args amqp.Table) (<-chan amqp.Delivery, error) {
-	return w.ch.Consume(queue, consumer, autoAck, exclusive, noLocal, noWait, args)
+func (w *wrapper) Consume(
+	queue, consumer string,
+	autoAck, exclusive, noLocal, noWait bool,
+	args *amqp.Table,
+) (<-chan amqp.Delivery, error) {
+	return w.ch.Consume(queue, consumer, autoAck, exclusive, noLocal, noWait, *args)
 }
 
 func (w *wrapper) CloseChannel() error {

@@ -20,6 +20,8 @@ func NewSMTPReceiver(
 	logger logger.Wrapper,
 	cfg ServerConfig,
 ) (r *Receiver, err error) {
+	cfg.setDefaults()
+
 	server := smtp.NewServer(backend)
 	server.Addr = cfg.getAddr()
 	server.Domain = cfg.Domain
