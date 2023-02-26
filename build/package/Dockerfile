@@ -2,11 +2,11 @@
 ## Build
 ## docker build -t pigeomail -f build/package/Dockerfile .
 ##
-FROM golang:1.17-buster AS build
+FROM golang:1.20-buster AS build
 
 WORKDIR /app
 ADD . .
-RUN go mod vendor
+RUN go mod download
 
 RUN go build -o /app/build/ci/pigeomail
 

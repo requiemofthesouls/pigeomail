@@ -1,19 +1,32 @@
-### Go template
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+### Vim ###
+# Swap
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
 
-# Test binary, built with `go test -c`
-*.test
+# Session
+Session.vim
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+# Temporary
+.netrwhist
+*~
+# Auto-generated tag files
+tags
+# Persistent undo
+[._]*.un~
+######
 
-# Dependency directories (remove the comment below to include it)
-vendor/
+.idea
+*.bak
+/vendor
+configs/config.yaml
+/docker/data
+.env
+.DS_Store
 
-.deploy/config.yaml
+example
 
+cert.key
+cert.pem

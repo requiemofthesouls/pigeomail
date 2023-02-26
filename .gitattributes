@@ -1,0 +1,6 @@
+*.pb.go -diff
+*.pb_easyjson.go -diff
+mock_*.go -diff
+*_mock.go -diff
+*.gen.go -diff
+*.pb.gw.go -diff

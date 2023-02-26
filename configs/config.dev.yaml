@@ -1,0 +1,44 @@
+namespace: pigeomail
+service: pigeomail
+instance: dev
+
+telegram:
+  token: "your_Bot_token"
+  webhook:
+    enabled: false
+    port: 8443
+    cert: ".cert.pem"
+    key: ".cert.key"
+
+
+smtp:
+  server:
+    port: 21025
+    domain: "example.com"
+    read_timeout_seconds: 10
+    write_timeout_seconds: 10
+    max_message_bytes: 1024
+    max_recipients: 50
+    allow_insecure_auth: true
+
+  client: { }
+
+logger:
+  caller: true
+  stacktrace: error
+  development: true
+  level: debug
+  encoding: console
+
+rabbitmq:
+  host: "localhost"
+  port: 5672
+  username: "guest"
+  password: "guest"
+
+mongo:
+  host: "localhost"
+  port: 27017
+  username: "root"
+  password: "example"
+  db_name: "example"
