@@ -3,11 +3,11 @@ package pigeomail
 import (
 	"context"
 	"fmt"
-	"sync"
-
-	customerrors "pigeomail/internal/errors"
 
 	"github.com/looplab/fsm"
+
+	customerrors "pigeomail/internal/errors"
+	"pigeomail/pkg/state"
 )
 
 type Service interface {
@@ -22,44 +22,13 @@ type Service interface {
 	DeleteEmail(ctx context.Context, chatID int64) error
 }
 
-// Создаем структуру, которая объединяет карту и мьютекс
-type FSMMap struct {
-	mu sync.Mutex
-	m  map[int64]*fsm.FSM
-}
-
-func NewFSMMap() *FSMMap {
-	return &FSMMap{
-		m: make(map[int64]*fsm.FSM),
-	}
-}
-
-func (fsmMap *FSMMap) Add(key int64, fsm *fsm.FSM) {
-	fsmMap.mu.Lock()
-	defer fsmMap.mu.Unlock()
-	fsmMap.m[key] = fsm
-}
-
-func (fsmMap *FSMMap) Get(key int64) (*fsm.FSM, bool) {
-	fsmMap.mu.Lock()
-	defer fsmMap.mu.Unlock()
-	val, ok := fsmMap.m[key]
-	return val, ok
-}
-
-func (fsmMap *FSMMap) Delete(key int64) {
-	fsmMap.mu.Lock()
-	defer fsmMap.mu.Unlock()
-	delete(fsmMap.m, key)
-}
-
 type service struct {
 	storage Storage
-	state   *FSMMap
+	state   *state.State
 }
 
 func NewService(storage Storage) Service {
-	return &service{storage: storage, state: NewFSMMap()}
+	return &service{storage: storage, state: state.NewState()}
 }
 
 func (s *service) PrepareCreateEmail(ctx context.Context, chatID int64) (err error) {

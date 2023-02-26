@@ -16,6 +16,10 @@ func (b *Bot) handleUserInput(update *tgbotapi.Update) {
 	var state string
 	var ok bool
 	if state, ok = b.svc.GetUserState(ctx, update.Message.Chat.ID); !ok {
+		var msg = tgbotapi.NewMessage(update.Message.Chat.ID, "use /help to see available commands")
+		if _, err := b.api.Send(msg); err != nil {
+			b.logger.Error(err, "failed to send message")
+		}
 		return
 	}
 
