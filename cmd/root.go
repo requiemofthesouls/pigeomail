@@ -2,46 +2,80 @@ package cmd
 
 import (
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/spf13/cobra"
 
-	"pigeomail/internal/config"
-	"pigeomail/pkg/logger"
+	"github.com/requiemofthesouls/pigeomail/pkg/modules/container"
 )
 
-var configPath string
+var (
+	diContainer      container.Container
+	cfgPath          string
+	stopNotification = make(chan struct{})
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "pigeomail",
-	Short: "Service which provides securely personal temporary email addresses",
+	// version
+	commitHash = "0000000000000000000000000000000000000000"
+	branch     string
+	tag        = "v0.0.0"
+	buildDate  string
+	builtBy    string
 
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		return nil
-	},
-}
+	// Root command.
+	rootCmd = &cobra.Command{
+		Use:           "example [command]",
+		Long:          "example project",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
+			if diContainer, err = container.Instance(
+				[]string{
+					container.App,
+					container.Request,
+					container.SubRequest,
+				},
+				map[string]interface{}{
+					"config":      cfgPath,
+					"cli_cmd":     cmd,
+					"cli_args":    args,
+					"commit_hash": commitHash,
+					"branch":      branch,
+					"tag":         tag,
+					"build_date":  buildDate,
+					"built_by":    builtBy,
+				}); err != nil {
+				return err
+			}
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
+			// graceful stop
+			go func() {
+				var c = make(chan os.Signal, 1)
+				signal.Notify(c,
+					syscall.SIGHUP,
+					syscall.SIGINT,
+					syscall.SIGTERM,
+				)
+
+				<-c
+
+				stopNotification <- struct{}{}
+			}()
+
+			return err
+		},
 	}
-}
+)
 
-func init() {
-	cobra.OnInitialize(logger.Init, initConfig)
+func Execute() error {
+	rootCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "config.yaml", "config file")
+	if err := rootCmd.Execute(); err != nil {
+		return err
+	}
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	if diContainer != nil {
+		return diContainer.Delete()
+	}
 
-	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "config file (default is $HOME/config.yaml)")
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	err := config.Init(configPath)
-	cobra.CheckErr(err)
+	return nil
 }
