@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/requiemofthesouls/pigeomail/internal/telegram/def"
+	logDef "github.com/requiemofthesouls/pigeomail/pkg/modules/logger/def"
 )
 
 func init() {
@@ -20,6 +21,11 @@ func init() {
 }
 
 func startTGBot(_ *cobra.Command, _ []string) error {
+	var l logDef.Wrapper
+	if err := diContainer.Fill(logDef.DIWrapper, &l); err != nil {
+		return err
+	}
+
 	var tgBot *def.TGBot
 	if err := diContainer.Fill(def.DITGBot, &tgBot); err != nil {
 		return err
@@ -34,7 +40,7 @@ func startTGBot(_ *cobra.Command, _ []string) error {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go func() { defer wg.Done(); tgBot.Run() }()
+	go func() { defer wg.Done(); tgBot.Run(ctx, l) }()
 
 	<-ctx.Done()
 

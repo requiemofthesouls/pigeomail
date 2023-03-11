@@ -69,7 +69,7 @@ func getWebhookUpdatesChan(
 			ReadHeaderTimeout: 3 * time.Second,
 		}
 
-		if err = server.ListenAndServe(); err != nil {
+		if err = server.ListenAndServeTLS(cfg.Cert, cfg.Key); err != nil {
 			l.Error("error in http.ListenAndServeTLS", zap.Error(err))
 		}
 	}()
@@ -77,7 +77,10 @@ func getWebhookUpdatesChan(
 	return updates, nil
 }
 
-func getUpdatesChan(l logger.Wrapper, tgAPI *tgbotapi.BotAPI) (updates tgbotapi.UpdatesChannel) {
+func getUpdatesChan(
+	l logger.Wrapper,
+	tgAPI *tgbotapi.BotAPI,
+) (updates tgbotapi.UpdatesChannel) {
 	l.Info("starting tg_bot without webhook mode")
 
 	updateCfg := tgbotapi.NewUpdate(0)
@@ -121,7 +124,10 @@ func NewBot(
 			cfg.Webhook,
 		)
 	case false:
-		updates = getUpdatesChan(l, tgAPI)
+		updates = getUpdatesChan(
+			l,
+			tgAPI,
+		)
 	}
 	// check get updates chan err
 	if err != nil {
@@ -270,9 +276,12 @@ func (b *Bot) runBot() {
 	}
 }
 
-func (b *Bot) Run() {
+func (b *Bot) Run(ctx context.Context, l logger.Wrapper) {
+	l.Info("starting tg_bot")
 	go b.runConsumer()
-	b.runBot()
+	go b.runBot()
+	<-ctx.Done()
+	l.Info("stopping tg_bot")
 }
 
 func (b *Bot) handleError(err error, chatID int64) {
