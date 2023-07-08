@@ -30,8 +30,8 @@ func initSMTPReceiver(cont container.Container) (_ interface{}, err error) {
 		return nil, err
 	}
 
-	var emailRep repDef.Email
-	if err = cont.Fill(repDef.DIDBRepositoryEmail, &emailRep); err != nil {
+	var emailRep repDef.TelegramUsers
+	if err = cont.Fill(repDef.DIDBRepositoryTelegramUsers, &emailRep); err != nil {
 		return nil, err
 	}
 

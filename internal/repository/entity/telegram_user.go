@@ -6,14 +6,18 @@ import (
 	"github.com/requiemofthesouls/pigeomail/internal/customerrors"
 )
 
-type EMail struct {
-	ID     string `bson:"_id,omitempty"`
-	ChatID int64  `json:"chat_id" bson:"chat_id"`
-	Name   string `json:"name" bson:"name"`
+type TelegramUser struct {
+	ID     int64
+	ChatID int64
+	EMail  string
 }
 
-func (e *EMail) Validate() (err error) {
-	if _, err = mail.ParseAddress(e.Name); err != nil {
+func (u *TelegramUser) IsExist() bool {
+	return u != nil
+}
+
+func (u *TelegramUser) ValidateEMail() (err error) {
+	if _, err = mail.ParseAddress(u.EMail); err != nil {
 		return customerrors.NewTelegramError("mail name isn't valid, please choose a new one")
 	}
 

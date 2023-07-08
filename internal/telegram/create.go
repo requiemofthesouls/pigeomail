@@ -18,7 +18,7 @@ func (b *Bot) handleCreateCommandStep1(update *tgbotapi.Update) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := b.repo.PrepareCreateEmail(ctx, update.Message.Chat.ID); err != nil {
+	if err := b.repo.PrepareCreate(ctx, update.Message.Chat.ID); err != nil {
 		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
@@ -33,12 +33,13 @@ func (b *Bot) handleCreateCommandStep2(update *tgbotapi.Update) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var email = entity.EMail{
-		ChatID: update.Message.Chat.ID,
-		Name:   update.Message.Text + "@" + b.domain,
-	}
-
-	if err := b.repo.CreateEmail(ctx, email); err != nil {
+	if err := b.repo.Create(
+		ctx,
+		&entity.TelegramUser{
+			ChatID: update.Message.Chat.ID,
+			EMail:  update.Message.Text + "@" + b.domain,
+		},
+	); err != nil {
 		b.handleError(err, update.Message.Chat.ID)
 		return
 	}

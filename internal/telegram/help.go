@@ -24,7 +24,7 @@ Check out my source code [here](https://github.com/requiemofthesouls/pigeomail).
 *My commands*
 	/create - Create new email
 	/list   - Show your email
-	/delete - Delete your email
+	/delete - DeleteByChatID your email
 	/help   - Get help message
 `
 

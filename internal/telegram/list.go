@@ -16,12 +16,12 @@ func (b *Bot) handleListCommand(update *tgbotapi.Update) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	email, err := b.repo.GetEmailByChatID(ctx, update.Message.Chat.ID)
+	email, err := b.repo.GetByChatID(ctx, update.Message.Chat.ID)
 	if err != nil {
 		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
 
-	msg.Text = fmt.Sprintf("Your active email: <%s>", email.Name)
+	msg.Text = fmt.Sprintf("Your active email: <%s>", email.EMail)
 	_, _ = b.api.Send(msg)
 }

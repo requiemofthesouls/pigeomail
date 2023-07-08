@@ -19,13 +19,13 @@ func (b *Bot) handleDeleteCommandStep1(update *tgbotapi.Update) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
 	var err error
-	var email entity.EMail
-	if email, err = b.repo.PrepareDeleteEmail(ctx, update.Message.Chat.ID); err != nil {
+	var email *entity.TelegramUser
+	if email, err = b.repo.PrepareDelete(ctx, update.Message.Chat.ID); err != nil {
 		b.handleError(err, update.Message.Chat.ID)
 		return
 	}
 
-	msg.Text = fmt.Sprintf("type 'yes' if you want to delete your email: <%s>", email.Name)
+	msg.Text = fmt.Sprintf("type 'yes' if you want to delete your email: <%s>", email.EMail)
 	_, _ = b.api.Send(msg)
 }
 
@@ -37,7 +37,7 @@ func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 	if update.Message.Text != "yes" {
 		msg.Text = "exiting from delete mode..."
 
-		if err := b.repo.CancelDeleteEmail(ctx, update.Message.Chat.ID); err != nil {
+		if err := b.repo.CancelDelete(ctx, update.Message.Chat.ID); err != nil {
 			b.handleError(err, update.Message.Chat.ID)
 			return
 		}
@@ -46,7 +46,7 @@ func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 		return
 	}
 
-	if err := b.repo.DeleteEmail(ctx, update.Message.Chat.ID); err != nil {
+	if err := b.repo.Delete(ctx, update.Message.Chat.ID); err != nil {
 		b.handleError(err, update.Message.Chat.ID)
 		return
 	}

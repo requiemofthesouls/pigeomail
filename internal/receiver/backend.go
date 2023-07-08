@@ -11,7 +11,7 @@ import (
 type Backend = smtp.Backend
 
 func NewBackend(
-	repo repository.Email,
+	repo repository.TelegramUsers,
 	publisher rabbitmq.Publisher,
 	logger logger.Wrapper,
 ) (b smtp.Backend, err error) {
@@ -24,7 +24,7 @@ func NewBackend(
 
 // The Backend implements SMTP server methods.
 type backend struct {
-	repo      repository.Email
+	repo      repository.TelegramUsers
 	publisher rabbitmq.Publisher
 	logger    logger.Wrapper
 }

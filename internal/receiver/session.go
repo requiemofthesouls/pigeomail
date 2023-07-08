@@ -12,7 +12,6 @@ import (
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
 
-	"github.com/requiemofthesouls/pigeomail/internal/customerrors"
 	"github.com/requiemofthesouls/pigeomail/internal/rabbitmq"
 	"github.com/requiemofthesouls/pigeomail/internal/repository"
 	"github.com/requiemofthesouls/pigeomail/pkg/modules/logger"
@@ -24,7 +23,7 @@ import (
 // A session is returned after EHLO.
 type session struct {
 	publisher rabbitmq.Publisher
-	repo      repository.Email
+	repo      repository.TelegramUsers
 	logger    logger.Wrapper
 }
 
@@ -57,13 +56,17 @@ func (s *session) Rcpt(to string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if _, err := s.repo.GetEmailByName(ctx, to); err != nil {
-		if err == customerrors.ErrNotFound {
-			l.Debug("mailbox not found, ignoring message")
-			return ErrMailNotDelivered
-		}
+	var (
+		isExists bool
+		err      error
+	)
+	if isExists, err = s.repo.ExistsByEMail(ctx, to); err != nil {
+		l.Error("repo.ExistsByEMail error", zap.Error(err))
+		return nil
+	}
 
-		l.Error("error GetEmailByName", zap.Error(err))
+	if !isExists {
+		l.Debug("mailbox not found, ignoring message")
 		return ErrMailNotDelivered
 	}
 

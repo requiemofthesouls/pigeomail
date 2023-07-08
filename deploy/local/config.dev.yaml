@@ -1,0 +1,64 @@
+namespace: pigeomail
+service: pigeomail
+instance: dev
+
+isStage: true
+
+logger:
+  caller: true
+  stacktrace: error
+  development: true
+  level: debug
+  encoding: console
+
+httpServers:
+  - name: "status-server"
+    address: ":21205"
+
+grpcServers:
+  - name: "public-api"
+    address: ":21201"
+    http:
+      address: ":21202"
+  - name: "private-api"
+    address: ":21203"
+
+
+telegram:
+  token: "your_Bot_token"
+  webhook:
+    enabled: false
+    port: 21206
+    cert: ".cert.pem"
+    key: ".cert.key"
+
+smtp:
+  server:
+    port: 21025
+    domain: "example.com"
+    read_timeout_seconds: 10
+    write_timeout_seconds: 10
+    max_message_bytes: 1024
+    max_recipients: 50
+    allow_insecure_auth: true
+
+  client: { }
+
+rabbitmq:
+  host: "localhost"
+  port: 5672
+  username: "guest"
+  password: "guest"
+
+
+postgres:
+  host: localhost
+  port: 5432
+  username: pigeomail
+  password: pigeomail
+  database: pigeomail
+  maxConns: 3
+  maxConnLifetimeSec: 30
+  maxConnIdleTimeSec: 10
+
+

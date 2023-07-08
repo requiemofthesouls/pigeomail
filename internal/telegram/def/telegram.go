@@ -35,8 +35,8 @@ func initTGBot(cont container.Container) (_ interface{}, err error) {
 		return nil, err
 	}
 
-	var repo repDef.EmailState
-	if err = cont.Fill(repDef.DIDBRepositoryEmailState, &repo); err != nil {
+	var repo repDef.TelegramUsersWithState
+	if err = cont.Fill(repDef.DIDBRepositoryTelegramUsersWithState, &repo); err != nil {
 		return nil, err
 	}
 

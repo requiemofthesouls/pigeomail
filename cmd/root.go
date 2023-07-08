@@ -24,8 +24,8 @@ var (
 
 	// Root command.
 	rootCmd = &cobra.Command{
-		Use:           "example [command]",
-		Long:          "example project",
+		Use:           "pigeomail [command]",
+		Long:          "pigeomail project",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {

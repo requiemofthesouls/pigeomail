@@ -11,6 +11,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
+	"github.com/requiemofthesouls/pigeomail/internal/repository/entity"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
 
@@ -23,7 +24,7 @@ import (
 type Bot struct {
 	api      *tgbotapi.BotAPI
 	updates  tgbotapi.UpdatesChannel
-	repo     repository.EmailState
+	repo     repository.TelegramUsersWithState
 	consumer rabbitmq.Consumer
 	domain   string
 	logger   logger.Wrapper
@@ -93,12 +94,12 @@ func getUpdatesChan(
 func NewBot(
 	cfg *Config,
 	l logger.Wrapper,
-	repo repository.EmailState,
+	repo repository.TelegramUsersWithState,
 	cons rabbitmq.Consumer,
 ) (bot *Bot, err error) {
 	var tgAPI *tgbotapi.BotAPI
 	if tgAPI, err = tgbotapi.NewBotAPI(cfg.Token); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("tgbotapi.NewBotAPI error: %w", err)
 	}
 	tgAPI.Debug = cfg.Debug
 	l.Info("authorized", zap.String("account", tgAPI.Self.UserName))
@@ -112,7 +113,7 @@ func NewBot(
 
 	if _, err = tgAPI.Request(deleteWHCfg); err != nil {
 		l.Error("fail remove webhook", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("tgAPI.Request error: %w", err)
 	}
 
 	var updates tgbotapi.UpdatesChannel
@@ -164,20 +165,23 @@ func (b *Bot) handleCommand(update *tgbotapi.Update) {
 }
 
 func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
-	from, ok := msg.Headers["from"]
-	if !ok {
+	var (
+		from interface{}
+		ok   bool
+	)
+	if from, ok = msg.Headers["from"]; !ok {
 		b.logger.Warn("fail to extract 'from' header from message")
 		_ = msg.Reject(false)
 	}
 
-	to, ok := msg.Headers["to"]
-	if !ok {
+	var to interface{}
+	if to, ok = msg.Headers["to"]; !ok {
 		b.logger.Warn("fail to extract 'to' header from message")
 		_ = msg.Reject(false)
 	}
 
-	subject, ok := msg.Headers["subject"]
-	if !ok {
+	var subject interface{}
+	if subject, ok = msg.Headers["subject"]; !ok {
 		b.logger.Warn("fail to extract 'subject' header from message")
 		_ = msg.Reject(false)
 	}
@@ -185,9 +189,25 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	chatID, err := b.repo.GetChatIDByEmail(ctx, to.(string))
-	if err != nil {
-		b.logger.Error("chatID not found", zap.String("email", to.(string)), zap.Error(err))
+	var destinationEmail string
+	if destinationEmail, ok = to.(string); !ok {
+		b.logger.Warn("fail to cast 'to' header to string")
+		_ = msg.Reject(false)
+		return
+	}
+
+	var (
+		user *entity.TelegramUser
+		err  error
+	)
+	if user, err = b.repo.GetByEMail(ctx, destinationEmail); err != nil {
+		b.logger.Error("repo.GetByEMail error", zap.Error(err))
+		_ = msg.Reject(false)
+		return
+	}
+
+	if !user.IsExist() {
+		b.logger.Warn("user not found", zap.String("email", destinationEmail))
 		_ = msg.Reject(false)
 	}
 
@@ -208,7 +228,7 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 			html.EscapeString(string(msg.Body[:3000])),
 		)
 
-		tgMsg := tgbotapi.NewMessage(chatID, text)
+		tgMsg := tgbotapi.NewMessage(user.ChatID, text)
 		tgMsg.ParseMode = tgbotapi.ModeHTML
 
 		if _, err = b.api.Send(tgMsg); err != nil {
@@ -221,7 +241,7 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 				y = len(msg.Body)
 			}
 
-			tgMsg = tgbotapi.NewMessage(chatID, html.EscapeString(string(msg.Body[i:y])))
+			tgMsg = tgbotapi.NewMessage(user.ChatID, html.EscapeString(string(msg.Body[i:y])))
 			tgMsg.ParseMode = tgbotapi.ModeHTML
 
 			if _, err = b.api.Send(tgMsg); err != nil {
@@ -241,7 +261,7 @@ func (b *Bot) incomingEmailConsumer(msg *amqp.Delivery) {
 		html.EscapeString(string(msg.Body)),
 	)
 
-	tgMsg := tgbotapi.NewMessage(chatID, text)
+	tgMsg := tgbotapi.NewMessage(user.ChatID, text)
 	tgMsg.ParseMode = tgbotapi.ModeHTML
 
 	if _, err = b.api.Send(tgMsg); err != nil {

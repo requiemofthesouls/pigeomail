@@ -21,7 +21,7 @@ tags
 .idea
 *.bak
 /vendor
-configs/config.yaml
+deploy/local/config.yaml
 /docker/data
 .env
 .DS_Store
