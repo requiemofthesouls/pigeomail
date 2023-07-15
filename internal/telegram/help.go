@@ -24,12 +24,12 @@ Check out my source code [here](https://github.com/requiemofthesouls/pigeomail).
 *My commands*
 	/create - Create new email
 	/list   - Show your email
-	/delete - DeleteByChatID your email
+	/delete - Delete your email
 	/help   - Get help message
 `
 
-	msg.Text = fmt.Sprintf(txt, b.domain)
+	msg.Text = fmt.Sprintf(txt, b.smtpDomain)
 	msg.ParseMode = "markdown"
 
-	_, _ = b.api.Send(msg)
+	_, _ = b.wrapper.Send(msg)
 }

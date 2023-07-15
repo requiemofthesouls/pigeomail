@@ -2,6 +2,8 @@ namespace: pigeomail
 service: pigeomail
 instance: dev
 
+smtp_domain: "example.com"
+
 isStage: true
 
 logger:
@@ -27,6 +29,7 @@ grpcServers:
 telegram:
   token: "your_Bot_token"
   webhook:
+    domain: "example.com"
     enabled: false
     port: 21206
     cert: ".cert.pem"
@@ -35,7 +38,6 @@ telegram:
 smtp:
   server:
     port: 21025
-    domain: "example.com"
     read_timeout_seconds: 10
     write_timeout_seconds: 10
     max_message_bytes: 1024

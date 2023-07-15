@@ -6,7 +6,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-
+	"github.com/looplab/fsm"
 	"github.com/requiemofthesouls/pigeomail/internal/repository/entity"
 )
 
@@ -16,41 +16,58 @@ func (b *Bot) handleDeleteCommandStep1(update *tgbotapi.Update) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+	var (
+		user *entity.TelegramUser
+		err  error
+	)
 
-	var err error
-	var email *entity.TelegramUser
-	if email, err = b.repo.PrepareDelete(ctx, update.Message.Chat.ID); err != nil {
-		b.handleError(err, update.Message.Chat.ID)
+	if user, err = b.repositories.users.GetByChatID(ctx, update.Message.Chat.ID); err != nil {
+		b.handleUnexpectedError(fmt.Errorf("repositories.users.GetByChatID error: %w", err), update.Message.Chat.ID)
 		return
 	}
 
-	msg.Text = fmt.Sprintf("type 'yes' if you want to delete your email: <%s>", email.EMail)
-	_, _ = b.api.Send(msg)
+	if !user.IsExist() {
+		b.sendStringToUser(update.Message.Chat.ID, "there's no created emails, use /create")
+		return
+	}
+
+	b.repositories.state.Add(user.ChatID,
+		fsm.NewFSM(
+			entity.StateRequestedDeleteEmail,
+			fsm.Events{
+				{
+					Name: entity.StateDeleteEmail,
+					Src:  []string{entity.StateRequestedDeleteEmail},
+					Dst:  entity.StateEmailDeleted,
+				},
+			},
+			fsm.Callbacks{},
+		))
+
+	b.sendStringToUser(update.Message.Chat.ID, fmt.Sprintf("type 'yes' if you want to delete your email: <%s>", user.EMail))
 }
 
 func (b *Bot) handleDeleteCommandStep2(update *tgbotapi.Update) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	if update.Message.Text != "yes" {
-		msg.Text = "exiting from delete mode..."
-
-		if err := b.repo.CancelDelete(ctx, update.Message.Chat.ID); err != nil {
-			b.handleError(err, update.Message.Chat.ID)
+		var ok bool
+		if _, ok = b.repositories.state.Get(update.Message.Chat.ID); !ok {
+			b.sendStringToUser(update.Message.Chat.ID, "delete email not requested, use /delete")
 			return
 		}
 
-		_, _ = b.api.Send(msg)
+		b.repositories.state.Delete(update.Message.Chat.ID)
+		b.sendStringToUser(update.Message.Chat.ID, "exiting from delete mode...")
 		return
 	}
 
-	if err := b.repo.Delete(ctx, update.Message.Chat.ID); err != nil {
-		b.handleError(err, update.Message.Chat.ID)
+	if err := b.repositories.users.DeleteByChatID(ctx, update.Message.Chat.ID); err != nil {
+		b.handleUnexpectedError(err, update.Message.Chat.ID)
 		return
 	}
 
-	msg.Text = "email has been deleted successfully"
-	_, _ = b.api.Send(msg)
+	b.repositories.state.Delete(update.Message.Chat.ID)
+	b.sendStringToUser(update.Message.Chat.ID, "email has been deleted successfully")
 }

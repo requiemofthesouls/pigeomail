@@ -1,9 +1,8 @@
 package entity
 
 import (
+	"errors"
 	"net/mail"
-
-	"github.com/requiemofthesouls/pigeomail/internal/customerrors"
 )
 
 type TelegramUser struct {
@@ -18,7 +17,7 @@ func (u *TelegramUser) IsExist() bool {
 
 func (u *TelegramUser) ValidateEMail() (err error) {
 	if _, err = mail.ParseAddress(u.EMail); err != nil {
-		return customerrors.NewTelegramError("mail name isn't valid, please choose a new one")
+		return errors.New("mail name isn't valid, please choose a new one")
 	}
 
 	return nil

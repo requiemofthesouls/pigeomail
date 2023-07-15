@@ -4,24 +4,18 @@ import (
 	"github.com/requiemofthesouls/pigeomail/internal/repository"
 	"github.com/requiemofthesouls/pigeomail/pkg/modules/container"
 	pgDef "github.com/requiemofthesouls/pigeomail/pkg/modules/postgres/def"
-	"github.com/requiemofthesouls/pigeomail/pkg/state"
 )
 
 const (
-	DIDBRepositoryTelegramUsers          = "db.repository.telegram_users"
-	DIDBRepositoryTelegramUsersWithState = "db.repository.telegram_users_with_state"
+	DIDBRepositoryTelegramUsers = "db.repository.telegram_users"
 )
 
 type (
-	TelegramUsers          = repository.TelegramUsers
-	TelegramUsersWithState = repository.TelegramUsersWithState
+	TelegramUsers = repository.TelegramUsers
 )
 
 var dbDeps = map[string]func(pgDef.Wrapper) interface{}{
 	DIDBRepositoryTelegramUsers: func(db pgDef.Wrapper) interface{} { return repository.NewUsers(db) },
-	DIDBRepositoryTelegramUsersWithState: func(db pgDef.Wrapper) interface{} {
-		return repository.NewUsersWithState(repository.NewUsers(db), state.NewState())
-	},
 }
 
 func init() {
