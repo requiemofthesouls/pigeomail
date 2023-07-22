@@ -9,22 +9,19 @@ import (
 	"time"
 
 	"github.com/emersion/go-smtp"
-	"github.com/streadway/amqp"
 	"go.uber.org/zap"
 
-	"github.com/requiemofthesouls/pigeomail/internal/rabbitmq"
 	"github.com/requiemofthesouls/pigeomail/internal/repository"
 	"github.com/requiemofthesouls/pigeomail/pkg/modules/logger"
 
-	"github.com/google/uuid"
 	"github.com/jhillyerd/enmime"
 )
 
 // A session is returned after EHLO.
 type session struct {
-	publisher rabbitmq.Publisher
-	repo      repository.TelegramUsers
-	logger    logger.Wrapper
+	//publisher rmqDef.Publisher
+	repo   repository.TelegramUsers
+	logger logger.Wrapper
 }
 
 type email struct {
@@ -105,28 +102,28 @@ func (s *session) parseMail(r io.Reader) (m *email, err error) {
 }
 
 func (s *session) Data(r io.Reader) (err error) {
-	var parsedEmail *email
-	if parsedEmail, err = s.parseMail(r); err != nil {
-		s.logger.Error("error parse parsedEmail", zap.Error(err))
-		return ErrMailNotDelivered
-	}
+	//var parsedEmail *email
+	//if parsedEmail, err = s.parseMail(r); err != nil {
+	//	s.logger.Error("error parse parsedEmail", zap.Error(err))
+	//	return ErrMailNotDelivered
+	//}
 
-	var msg = amqp.Publishing{
-		Headers: amqp.Table{
-			"from":    parsedEmail.From,
-			"to":      parsedEmail.To,
-			"subject": parsedEmail.Subject,
-			"date":    parsedEmail.Date.Unix(),
-		},
-		MessageId:   uuid.New().String(),
-		ContentType: parsedEmail.ContentType,
-		Body:        []byte(parsedEmail.Body),
-	}
+	//var msg = amqp.Publishing{
+	//	Headers: amqp.Table{
+	//		"from":    parsedEmail.From,
+	//		"to":      parsedEmail.To,
+	//		"subject": parsedEmail.Subject,
+	//		"date":    parsedEmail.Date.Unix(),
+	//	},
+	//	MessageId:   uuid.New().String(),
+	//	ContentType: parsedEmail.ContentType,
+	//	Body:        []byte(parsedEmail.Body),
+	//}
 
-	if err = s.publisher.Publish(rabbitmq.MessageReceivedQueueName, msg); err != nil {
-		s.logger.Error("error PublishIncomingEmail", zap.Error(err))
-		return ErrMailNotDelivered
-	}
+	//if err = s.publisher.Publish(rabbitmq.MessageReceivedQueueName, msg); err != nil {
+	//	s.logger.Error("error PublishIncomingEmail", zap.Error(err))
+	//	return ErrMailNotDelivered
+	//}
 
 	return nil
 }

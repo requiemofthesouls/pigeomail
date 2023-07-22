@@ -1,0 +1,7 @@
+go 1.20
+
+use (
+	.
+	api
+	//pkg/tools/protoc-gen-go-rmq
+)

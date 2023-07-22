@@ -1,8 +1,6 @@
 package def
 
 import (
-	rmqDef "github.com/requiemofthesouls/pigeomail/internal/rabbitmq/def"
-
 	"github.com/requiemofthesouls/pigeomail/internal/receiver"
 	repDef "github.com/requiemofthesouls/pigeomail/internal/repository/def"
 	cfgDef "github.com/requiemofthesouls/pigeomail/pkg/modules/config/def"
@@ -40,13 +38,17 @@ func initSMTPReceiver(cont container.Container) (_ interface{}, err error) {
 		return nil, err
 	}
 
-	var publisher rmqDef.Publisher
-	if err = cont.Fill(rmqDef.DIAMQPPublisher, &publisher); err != nil {
-		return nil, err
-	}
+	//var publisher rmqDef.Publisher
+	//if err = cont.Fill(rmqDef.DIAMQPPublisher, &publisher); err != nil {
+	//	return nil, err
+	//}
 
 	var be receiver.Backend
-	if be, err = receiver.NewBackend(emailRep, publisher, l); err != nil {
+	if be, err = receiver.NewBackend(
+		emailRep,
+		//publisher,
+		l,
+	); err != nil {
 		return nil, err
 	}
 

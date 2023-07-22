@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package rmq.options;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/requiemofthesouls/pigeomail/pkg/tools/protoc-gen-go-rmq/proto;optionspb";
+
+extend google.protobuf.MethodOptions {
+  Publisher publisher = 2001;
+  Handler handler = 2002;
+}
+
+message Publisher {
+  string exchangeName = 1;
+  string routingKey = 2;
+}
+
+message Handler {
+  string queueName = 1;
+  string exchangeName = 2;
+  string routingKey = 3;
+}

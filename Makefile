@@ -13,11 +13,21 @@ certs:
 	chmod 775 .deploy/cert.key
 	chmod 775 .deploy/cert.pem
 
-buf_gen: ## run bufbuild generator
+gogen_update:
+	@printf "\033[33mUpdating rmq generator...\033[0m\n"
+	@docker pull ghcr.io/requiemofthesouls/gogen:latest
+
+gen_rmq:  ## run rmq generator
+	@printf "\033[33mGenerating rmq code...\033[0m\n"
+	@docker run --rm -it -v $(PWD):/app ghcr.io/requiemofthesouls/gogen:latest go generate ./proto/rmq
+	@gofmt -s -w ./pb
+
+gen_buf: ## run bufbuild generator
 	@printf "\033[33mGenerating code with buf...\033[0m\n"
 	@buf generate
+	@go mod vendor
 
-gen: buf_gen ## run bufbuild generator
+gen: gen_rmq gen_buf
 	@go mod vendor
 
 format: ## format code

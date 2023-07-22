@@ -8,19 +8,15 @@
 version: '3'
 services:
   rabbitmq:
-    container_name: pigeomail-rmq
-    image: rabbitmq:management-alpine
+    build:
+      context: .
+      dockerfile: RMQ.Dockerfile
+    container_name: pigeomail-rabbitmq
+    volumes:
+      - ./.docker/data/rabbitmq:/var/lib/rabbitmq
     ports:
-      - '5672:5672'
-      - '15672:15672'
-    environment:
-      - RABBITMQ_USERNAME=guest
-      - RABBITMQ_PASSWORD=guest
-    healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - "127.0.0.1:15672:15672"
+      - "127.0.0.1:5672:5672"
 
   pg:
     image: bitnami/postgresql:15.3.0
@@ -33,5 +29,5 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./data/postgresql:/var/lib/postgresql/data
+      - ./.docker/data/postgresql:/var/lib/postgresql/data
 
