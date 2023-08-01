@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	rmqDef "github.com/requiemofthesouls/svc-rmq/def"
 	"github.com/spf13/cobra"
 
 	logDef "github.com/requiemofthesouls/logger/def"
@@ -31,6 +32,11 @@ func startTGBot(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
+	var rmqManager rmqDef.Manager
+	if err := diContainer.Fill(rmqDef.DIManager, &rmqManager); err != nil {
+		return err
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	// graceful shutdown
 	go func() {
@@ -41,6 +47,9 @@ func startTGBot(_ *cobra.Command, _ []string) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() { defer wg.Done(); tgBot.Start(ctx) }()
+
+	wg.Add(1)
+	go func() { defer wg.Done(); rmqManager.StartAll(ctx) }()
 
 	<-ctx.Done()
 

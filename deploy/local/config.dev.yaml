@@ -13,18 +13,6 @@ logger:
   level: debug
   encoding: console
 
-httpServers:
-  - name: "status-server"
-    address: ":21205"
-
-grpcServers:
-  - name: "public-api"
-    address: ":21201"
-    http:
-      address: ":21202"
-  - name: "private-api"
-    address: ":21203"
-
 
 telegram:
   token: "your_Bot_token"
@@ -46,11 +34,23 @@ smtp:
 
   client: { }
 
-rabbitmq:
-  host: "localhost"
-  port: 5672
-  username: "guest"
-  password: "guest"
+rmq:
+  connections:
+    - name: "connection-1"
+      host: "localhost"
+      port: 5672
+      username: "guest"
+      password: "guest"
+      params:
+        connectionName: "pigeomail-connection-1"
+        heartbeatSec: 10
+        locale: "en_US"
+  clients:
+    - name: "publisher"
+      connection: "connection-1"
+  servers:
+    - name: "smtp-message-events"
+      connection: "connection-1"
 
 
 postgres:

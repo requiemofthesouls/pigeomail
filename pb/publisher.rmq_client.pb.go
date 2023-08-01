@@ -10,7 +10,7 @@ import (
 )
 
 type PublisherEventsRMQClient interface {
-	PaymentGatewayV1(ctx context.Context, ev *events1.EmptyMessage) error
+	SMTPMessageV1(ctx context.Context, ev *events1.SMTPMessageEventV1) error
 }
 type publisherEventsRMQClient struct {
 	client client.Manager
@@ -21,6 +21,6 @@ func NewPublisherEventsRMQClient(client client.Manager) PublisherEventsRMQClient
 		client: client,
 	}
 }
-func (c *publisherEventsRMQClient) PaymentGatewayV1(ctx context.Context, msg *events1.EmptyMessage) error {
-	return c.client.PublishToExchange(ctx, "events.ps-list", "paymentGateway.v1", msg)
+func (c *publisherEventsRMQClient) SMTPMessageV1(ctx context.Context, msg *events1.SMTPMessageEventV1) error {
+	return c.client.PublishToExchange(ctx, "events.smtp", "message.v1", msg)
 }

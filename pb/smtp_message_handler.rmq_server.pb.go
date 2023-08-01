@@ -12,35 +12,35 @@ import (
 )
 
 type SMTPMessageEventsRMQServer interface {
-	SMTPMessageReceivedV1(context.Context, *events1.EmptyMessage) error
+	SMTPMessageV1(context.Context, *events1.SMTPMessageEventV1) error
 }
 
 func RegisterSMTPMessageEventsRMQServer(s server.Manager, srv SMTPMessageEventsRMQServer) {
 	s.RegisterService(
 		consumer.MapQueueHandlers{
-			"h.ps-list.TransactionHandlerV1": consumer.QueueHandlerItem{
-				ExchangeName: "events.payments",
-				RoutingKey:   "transaction.v1",
-				Handler:      NewRMQSMTPMessageReceivedV1(srv),
+			"h.ps-list.SMTPMessageHandlerV1": consumer.QueueHandlerItem{
+				ExchangeName: "events.smtp",
+				RoutingKey:   "message.v1",
+				Handler:      NewRMQSMTPMessageV1(srv),
 			},
 		},
 	)
 }
 
-type RMQSMTPMessageReceivedV1 struct {
+type RMQSMTPMessageV1 struct {
 	listener SMTPMessageEventsRMQServer
 }
 
-func NewRMQSMTPMessageReceivedV1(listener SMTPMessageEventsRMQServer) RMQSMTPMessageReceivedV1 {
-	return RMQSMTPMessageReceivedV1{
+func NewRMQSMTPMessageV1(listener SMTPMessageEventsRMQServer) RMQSMTPMessageV1 {
+	return RMQSMTPMessageV1{
 		listener: listener,
 	}
 }
-func (h RMQSMTPMessageReceivedV1) Handle(ctx context.Context, dec func(interface{}) error) error {
-	var ev events1.EmptyMessage
+func (h RMQSMTPMessageV1) Handle(ctx context.Context, dec func(interface{}) error) error {
+	var ev events1.SMTPMessageEventV1
 	if err := dec(&ev); err != nil {
 		return err
 	}
 
-	return h.listener.SMTPMessageReceivedV1(ctx, &ev)
+	return h.listener.SMTPMessageV1(ctx, &ev)
 }

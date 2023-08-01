@@ -55,7 +55,7 @@ func (u *tgUsers) GetByEMail(ctx context.Context, email string) (*entity.Telegra
 
 	if err := u.db.QueryRow(
 		ctx,
-		sqlSelectUsers+"WHERE tgUsers = $1",
+		sqlSelectUsers+"WHERE email = $1",
 		email,
 	).Scan(
 		&user.ID,

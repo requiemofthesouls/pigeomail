@@ -8,11 +8,11 @@ import "github.com/requiemofthesouls/protoc-gen-go-rmq/proto/options.proto";
 option go_package = "github.com/requiemofthesouls/pigeomail/proto/rmq;pigeomailpb";
 
 service SMTPMessageEvents {
-  rpc SMTPMessageReceivedV1 (pigeomail.EmptyMessage) returns (pigeomail.EmptyMessage) {
+  rpc SMTPMessageV1 (pigeomail.SMTPMessageEventV1) returns (pigeomail.EmptyMessage) {
     option (rmq.options.handler) = {
-      queueName: "h.ps-list.TransactionHandlerV1"
-      exchangeName: "events.payments"
-      routingKey: "transaction.v1"
+      queueName: "h.ps-list.SMTPMessageHandlerV1"
+      exchangeName: "events.smtp"
+      routingKey: "message.v1"
     };
   }
 }

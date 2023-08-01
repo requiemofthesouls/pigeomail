@@ -9,19 +9,19 @@ import (
 	"time"
 
 	"github.com/emersion/go-smtp"
-	"go.uber.org/zap"
-
-	"github.com/requiemofthesouls/logger"
-	"github.com/requiemofthesouls/pigeomail/internal/repository"
-
 	"github.com/jhillyerd/enmime"
+	"github.com/requiemofthesouls/logger"
+	pigeomail_api_pb "github.com/requiemofthesouls/pigeomail/api/pb"
+	"github.com/requiemofthesouls/pigeomail/internal/repository"
+	pigeomailpb "github.com/requiemofthesouls/pigeomail/pb"
+	"go.uber.org/zap"
 )
 
 // A session is returned after EHLO.
 type session struct {
-	//publisher rmqDef.Publisher
-	repo   repository.TelegramUsers
-	logger logger.Wrapper
+	publisher pigeomailpb.PublisherEventsRMQClient
+	repo      repository.TelegramUsers
+	logger    logger.Wrapper
 }
 
 type email struct {
@@ -102,28 +102,27 @@ func (s *session) parseMail(r io.Reader) (m *email, err error) {
 }
 
 func (s *session) Data(r io.Reader) (err error) {
-	//var parsedEmail *email
-	//if parsedEmail, err = s.parseMail(r); err != nil {
-	//	s.logger.Error("error parse parsedEmail", zap.Error(err))
-	//	return ErrMailNotDelivered
-	//}
+	var parsedEmail *email
+	if parsedEmail, err = s.parseMail(r); err != nil {
+		s.logger.Error("error parse parsedEmail", zap.Error(err))
+		return ErrMailNotDelivered
+	}
 
-	//var msg = amqp.Publishing{
-	//	Headers: amqp.Table{
-	//		"from":    parsedEmail.From,
-	//		"to":      parsedEmail.To,
-	//		"subject": parsedEmail.Subject,
-	//		"date":    parsedEmail.Date.Unix(),
-	//	},
-	//	MessageId:   uuid.New().String(),
-	//	ContentType: parsedEmail.ContentType,
-	//	Body:        []byte(parsedEmail.Body),
-	//}
-
-	//if err = s.publisher.Publish(rabbitmq.MessageReceivedQueueName, msg); err != nil {
-	//	s.logger.Error("error PublishIncomingEmail", zap.Error(err))
-	//	return ErrMailNotDelivered
-	//}
+	if err = s.publisher.SMTPMessageV1(
+		context.Background(),
+		&pigeomail_api_pb.SMTPMessageEventV1{
+			From:        parsedEmail.From,
+			To:          parsedEmail.To,
+			Subject:     parsedEmail.Subject,
+			ContentType: parsedEmail.ContentType,
+			Body:        parsedEmail.Body,
+			Html:        parsedEmail.HTML,
+			Timestamp:   parsedEmail.Date.Unix(),
+		},
+	); err != nil {
+		s.logger.Error("s.publisher.SMTPMessageV1", zap.Error(err))
+		return ErrMailNotDelivered
+	}
 
 	return nil
 }
