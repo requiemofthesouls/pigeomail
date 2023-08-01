@@ -22,7 +22,7 @@ tags
 *.bak
 /vendor
 deploy/local/config.yaml
-/docker/data
+deploy/local/.docker
 .env
 .DS_Store
 

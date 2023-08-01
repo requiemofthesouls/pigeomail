@@ -19,13 +19,13 @@
 
 ### Setting up the project locally:
 
-1. Take a copy of your config from default config (in configs folder)
+1. Make your own config (example located at deploy/local/config.dev.yaml)
 
       ``` cp config.dev.yaml config.yaml ```
 
-2. Up the required containers( docker-compose located in build/package folder)
+2. Up the required containers( docker-compose located in deploy/local folder)
 
-      ``` docker compose -f build/package/docker-compose up ```
+      ``` docker compose -f deploy/local up ```
 
 3. Generate token from telegram by creating a bot, using [@BotFather](https://t.me/botfather)  
 
@@ -35,11 +35,9 @@
 
       ``` go build -o pigeomail main.go ```
 
-5. launch the services: We have two services receiver( to get incoming mail) and tg_bot (to interact with telegram bot API)
+5. Launch the service with your own config
 
-      ``` ./pigeomail receiver -c configs/config.yaml ```
-
-      ``` ./pigeomail tg_bot -c configs/config.yaml ```
+      ``` ./pigeomail start -c deploy/local/config.yaml ```
 
 
 ## Developers

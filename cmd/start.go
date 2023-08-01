@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	receiverDef "github.com/requiemofthesouls/pigeomail/internal/receiver/def"
 	rmqDef "github.com/requiemofthesouls/svc-rmq/def"
 	"github.com/spf13/cobra"
 
@@ -15,13 +16,13 @@ import (
 
 func init() {
 	rootCmd.AddCommand(&cobra.Command{
-		Use:   "tg_bot",
-		Short: "start telegram bot",
-		RunE:  startTGBot,
+		Use:   "start",
+		Short: "start pigeomail service",
+		RunE:  startService,
 	})
 }
 
-func startTGBot(_ *cobra.Command, _ []string) error {
+func startService(_ *cobra.Command, _ []string) error {
 	var l logDef.Wrapper
 	if err := diContainer.Fill(logDef.DIWrapper, &l); err != nil {
 		return err
@@ -34,6 +35,11 @@ func startTGBot(_ *cobra.Command, _ []string) error {
 
 	var rmqManager rmqDef.Manager
 	if err := diContainer.Fill(rmqDef.DIManager, &rmqManager); err != nil {
+		return err
+	}
+
+	var receiver *receiverDef.Receiver
+	if err := diContainer.Fill(receiverDef.DISMTPReceiver, &receiver); err != nil {
 		return err
 	}
 
@@ -50,6 +56,9 @@ func startTGBot(_ *cobra.Command, _ []string) error {
 
 	wg.Add(1)
 	go func() { defer wg.Done(); rmqManager.StartAll(ctx) }()
+
+	wg.Add(1)
+	go func() { defer wg.Done(); receiver.Run(ctx) }()
 
 	<-ctx.Done()
 
