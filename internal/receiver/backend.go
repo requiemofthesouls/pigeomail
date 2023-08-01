@@ -3,8 +3,8 @@ package receiver
 import (
 	"github.com/emersion/go-smtp"
 
+	"github.com/requiemofthesouls/logger"
 	"github.com/requiemofthesouls/pigeomail/internal/repository"
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/logger"
 )
 
 type Backend = smtp.Backend

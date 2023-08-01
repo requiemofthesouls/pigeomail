@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/logger"
-	logDef "github.com/requiemofthesouls/pigeomail/pkg/modules/logger/def"
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/migrate"
-	migratePostgresDef "github.com/requiemofthesouls/pigeomail/pkg/modules/migrate/postgres/def"
+	"github.com/requiemofthesouls/logger"
+	logDef "github.com/requiemofthesouls/logger/def"
+	"github.com/requiemofthesouls/migrate"
+	migratePostgresDef "github.com/requiemofthesouls/migrate/postgres/def"
 	"github.com/spf13/cobra"
 )
 

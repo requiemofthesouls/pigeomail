@@ -1,11 +1,11 @@
 package def
 
 import (
+	cfgDef "github.com/requiemofthesouls/config/def"
+	"github.com/requiemofthesouls/container"
+	logDef "github.com/requiemofthesouls/logger/def"
 	"github.com/requiemofthesouls/pigeomail/internal/receiver"
 	repDef "github.com/requiemofthesouls/pigeomail/internal/repository/def"
-	cfgDef "github.com/requiemofthesouls/pigeomail/pkg/modules/config/def"
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/container"
-	logDef "github.com/requiemofthesouls/pigeomail/pkg/modules/logger/def"
 )
 
 const DISMTPReceiver = "smtp.receiver"

@@ -1,9 +1,9 @@
 package def
 
 import (
+	"github.com/requiemofthesouls/container"
 	"github.com/requiemofthesouls/pigeomail/internal/repository"
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/container"
-	pgDef "github.com/requiemofthesouls/pigeomail/pkg/modules/postgres/def"
+	pgDef "github.com/requiemofthesouls/postgres/def"
 )
 
 const (

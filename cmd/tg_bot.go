@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	logDef "github.com/requiemofthesouls/logger/def"
 	tgBotDef "github.com/requiemofthesouls/pigeomail/internal/telegram/def"
-	logDef "github.com/requiemofthesouls/pigeomail/pkg/modules/logger/def"
 )
 
 func init() {

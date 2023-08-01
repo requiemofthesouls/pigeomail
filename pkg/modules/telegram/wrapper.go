@@ -8,7 +8,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/logger"
+	"github.com/requiemofthesouls/logger"
 	"go.uber.org/zap"
 )
 

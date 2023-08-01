@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/container"
+	"github.com/requiemofthesouls/container"
 )
 
 var (

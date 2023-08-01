@@ -3,11 +3,11 @@ package def
 import (
 	"errors"
 
+	cfgDef "github.com/requiemofthesouls/config/def"
+	"github.com/requiemofthesouls/container"
+	logDef "github.com/requiemofthesouls/logger/def"
 	repDef "github.com/requiemofthesouls/pigeomail/internal/repository/def"
 	"github.com/requiemofthesouls/pigeomail/internal/telegram"
-	cfgDef "github.com/requiemofthesouls/pigeomail/pkg/modules/config/def"
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/container"
-	logDef "github.com/requiemofthesouls/pigeomail/pkg/modules/logger/def"
 	tgDef "github.com/requiemofthesouls/pigeomail/pkg/modules/telegram/def"
 	"github.com/requiemofthesouls/pigeomail/pkg/state"
 )

@@ -7,5 +7,5 @@ package rmq
 import (
 	_ "github.com/requiemofthesouls/pigeomail/api/proto"
 
-	_ "github.com/requiemofthesouls/pigeomail/pkg/tools/protoc-gen-go-rmq/proto"
+	_ "github.com/requiemofthesouls/protoc-gen-go-rmq/proto"
 )

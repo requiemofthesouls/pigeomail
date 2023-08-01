@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/requiemofthesouls/pigeomail/internal/repository/entity"
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/postgres"
+	"github.com/requiemofthesouls/postgres"
 )
 
 const (
