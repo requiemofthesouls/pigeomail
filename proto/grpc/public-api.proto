@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package pigeomail;
+
+option go_package = "github.com/requiemofthesouls/pigeomail/proto/grpc;pigeomail_api_pb";
+
+
+service PublicAPI {
+}
+

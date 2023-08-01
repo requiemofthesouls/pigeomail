@@ -1,13 +1,12 @@
 package def
 
 import (
-	rmqDef "github.com/requiemofthesouls/pigeomail/internal/rabbitmq/def"
-
+	cfgDef "github.com/requiemofthesouls/config/def"
+	"github.com/requiemofthesouls/container"
+	logDef "github.com/requiemofthesouls/logger/def"
+	rmqDef "github.com/requiemofthesouls/pigeomail/cmd/rmq/def"
 	"github.com/requiemofthesouls/pigeomail/internal/receiver"
 	repDef "github.com/requiemofthesouls/pigeomail/internal/repository/def"
-	cfgDef "github.com/requiemofthesouls/pigeomail/pkg/modules/config/def"
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/container"
-	logDef "github.com/requiemofthesouls/pigeomail/pkg/modules/logger/def"
 )
 
 const DISMTPReceiver = "smtp.receiver"
@@ -30,8 +29,8 @@ func initSMTPReceiver(cont container.Container) (_ interface{}, err error) {
 		return nil, err
 	}
 
-	var emailRep repDef.Email
-	if err = cont.Fill(repDef.DIDBRepositoryEmail, &emailRep); err != nil {
+	var emailRep repDef.TelegramUsers
+	if err = cont.Fill(repDef.DIDBRepositoryTelegramUsers, &emailRep); err != nil {
 		return nil, err
 	}
 
@@ -40,13 +39,17 @@ func initSMTPReceiver(cont container.Container) (_ interface{}, err error) {
 		return nil, err
 	}
 
-	var publisher rmqDef.Publisher
-	if err = cont.Fill(rmqDef.DIAMQPPublisher, &publisher); err != nil {
+	var publisher rmqDef.PublisherEventsClient
+	if err = cont.Fill(rmqDef.DIClientPublisherEvents, &publisher); err != nil {
 		return nil, err
 	}
 
 	var be receiver.Backend
-	if be, err = receiver.NewBackend(emailRep, publisher, l); err != nil {
+	if be, err = receiver.NewBackend(
+		emailRep,
+		publisher,
+		l,
+	); err != nil {
 		return nil, err
 	}
 

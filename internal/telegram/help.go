@@ -28,8 +28,8 @@ Check out my source code [here](https://github.com/requiemofthesouls/pigeomail).
 	/help   - Get help message
 `
 
-	msg.Text = fmt.Sprintf(txt, b.domain)
+	msg.Text = fmt.Sprintf(txt, b.smtpDomain)
 	msg.ParseMode = "markdown"
 
-	_, _ = b.api.Send(msg)
+	_, _ = b.wrapper.Send(msg)
 }

@@ -19,7 +19,7 @@ func TestReceiveEmail(t *testing.T) {
 	defer conn.Close()
 
 	// Указываем заголовки письма
-	from := "Your Name <your_email@gmail.com>"
+	from := "Your EMail <your_email@gmail.com>"
 	to := []string{"keepo@pigeomail.ddns.net"}
 	subject := "Test Email"
 	body := "Hello,\n\nThis is a test email."

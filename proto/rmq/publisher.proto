@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pigeomail;
+
+import "github.com/requiemofthesouls/pigeomail/api/proto/pigeomail.events.proto";
+import "github.com/requiemofthesouls/protoc-gen-go-rmq/proto/options.proto";
+
+option go_package = "github.com/requiemofthesouls/pigeomail/proto/rmq;pigeomailpb";
+
+service PublisherEvents {
+  rpc SMTPMessageV1 (pigeomail.SMTPMessageEventV1) returns (pigeomail.EmptyMessage) {
+    option (rmq.options.publisher) = {
+      exchangeName: "events.smtp"
+      routingKey: "message.v1"
+    };
+  }
+}

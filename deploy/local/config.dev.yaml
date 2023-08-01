@@ -1,0 +1,66 @@
+namespace: pigeomail
+service: pigeomail
+instance: dev
+
+smtp_domain: "example.com"
+
+isStage: true
+
+logger:
+  caller: true
+  stacktrace: error
+  development: true
+  level: debug
+  encoding: console
+
+
+telegram:
+  token: "your_Bot_token"
+  webhook:
+    domain: "example.com"
+    enabled: false
+    port: 21206
+    cert: ".cert.pem"
+    key: ".cert.key"
+
+smtp:
+  server:
+    port: 21025
+    read_timeout_seconds: 10
+    write_timeout_seconds: 10
+    max_message_bytes: 1024
+    max_recipients: 50
+    allow_insecure_auth: true
+
+  client: { }
+
+rmq:
+  connections:
+    - name: "connection-1"
+      host: "localhost"
+      port: 5672
+      username: "guest"
+      password: "guest"
+      params:
+        connectionName: "pigeomail-connection-1"
+        heartbeatSec: 10
+        locale: "en_US"
+  clients:
+    - name: "publisher"
+      connection: "connection-1"
+  servers:
+    - name: "smtp-message-events"
+      connection: "connection-1"
+
+
+postgres:
+  host: localhost
+  port: 5432
+  username: pigeomail
+  password: pigeomail
+  database: pigeomail
+  maxConns: 3
+  maxConnLifetimeSec: 30
+  maxConnIdleTimeSec: 10
+
+

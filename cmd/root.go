@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/container"
+	"github.com/requiemofthesouls/container"
 )
 
 var (
@@ -24,8 +24,8 @@ var (
 
 	// Root command.
 	rootCmd = &cobra.Command{
-		Use:           "example [command]",
-		Long:          "example project",
+		Use:           "pigeomail [command]",
+		Long:          "pigeomail project",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {

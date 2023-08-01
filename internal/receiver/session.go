@@ -9,22 +9,18 @@ import (
 	"time"
 
 	"github.com/emersion/go-smtp"
-	"github.com/streadway/amqp"
-	"go.uber.org/zap"
-
-	"github.com/requiemofthesouls/pigeomail/internal/customerrors"
-	"github.com/requiemofthesouls/pigeomail/internal/rabbitmq"
-	"github.com/requiemofthesouls/pigeomail/internal/repository"
-	"github.com/requiemofthesouls/pigeomail/pkg/modules/logger"
-
-	"github.com/google/uuid"
 	"github.com/jhillyerd/enmime"
+	"github.com/requiemofthesouls/logger"
+	pigeomail_api_pb "github.com/requiemofthesouls/pigeomail/api/pb"
+	"github.com/requiemofthesouls/pigeomail/internal/repository"
+	pigeomailpb "github.com/requiemofthesouls/pigeomail/pb"
+	"go.uber.org/zap"
 )
 
 // A session is returned after EHLO.
 type session struct {
-	publisher rabbitmq.Publisher
-	repo      repository.Email
+	publisher pigeomailpb.PublisherEventsRMQClient
+	repo      repository.TelegramUsers
 	logger    logger.Wrapper
 }
 
@@ -57,13 +53,17 @@ func (s *session) Rcpt(to string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if _, err := s.repo.GetEmailByName(ctx, to); err != nil {
-		if err == customerrors.ErrNotFound {
-			l.Debug("mailbox not found, ignoring message")
-			return ErrMailNotDelivered
-		}
+	var (
+		isExists bool
+		err      error
+	)
+	if isExists, err = s.repo.ExistsByEMail(ctx, to); err != nil {
+		l.Error("repo.ExistsByEMail error", zap.Error(err))
+		return nil
+	}
 
-		l.Error("error GetEmailByName", zap.Error(err))
+	if !isExists {
+		l.Debug("mailbox not found, ignoring message")
 		return ErrMailNotDelivered
 	}
 
@@ -108,20 +108,19 @@ func (s *session) Data(r io.Reader) (err error) {
 		return ErrMailNotDelivered
 	}
 
-	var msg = amqp.Publishing{
-		Headers: amqp.Table{
-			"from":    parsedEmail.From,
-			"to":      parsedEmail.To,
-			"subject": parsedEmail.Subject,
-			"date":    parsedEmail.Date.Unix(),
+	if err = s.publisher.SMTPMessageV1(
+		context.Background(),
+		&pigeomail_api_pb.SMTPMessageEventV1{
+			From:        parsedEmail.From,
+			To:          parsedEmail.To,
+			Subject:     parsedEmail.Subject,
+			ContentType: parsedEmail.ContentType,
+			Body:        parsedEmail.Body,
+			Html:        parsedEmail.HTML,
+			Timestamp:   parsedEmail.Date.Unix(),
 		},
-		MessageId:   uuid.New().String(),
-		ContentType: parsedEmail.ContentType,
-		Body:        []byte(parsedEmail.Body),
-	}
-
-	if err = s.publisher.Publish(rabbitmq.MessageReceivedQueueName, msg); err != nil {
-		s.logger.Error("error PublishIncomingEmail", zap.Error(err))
+	); err != nil {
+		s.logger.Error("s.publisher.SMTPMessageV1", zap.Error(err))
 		return ErrMailNotDelivered
 	}
 
