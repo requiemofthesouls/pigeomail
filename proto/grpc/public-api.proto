@@ -4,7 +4,28 @@ package pigeomail;
 
 option go_package = "github.com/requiemofthesouls/pigeomail/proto/grpc;pigeomail_api_pb";
 
+import "google/api/annotations.proto";
+
 
 service PublicAPI {
+  rpc CreateTemporaryEMailV1(PublicAPICreateTemporaryEMailV1Request) returns (stream PublicAPICreateTemporaryEMailV1Response) {
+    option (google.api.http) = {post: "/api/pigeomail/v1/tempmail", body: "*"};
+  }
 }
 
+message PublicAPICreateTemporaryEMailV1Request {
+}
+
+message PublicAPICreateTemporaryEMailV1Response {
+  string email = 1;
+}
+
+message EMail {
+  string id = 1;
+  string email = 2;
+  string subject = 3;
+  string body = 4;
+  string sender = 5;
+  string recipient = 6;
+  int64 created_at = 7;
+}

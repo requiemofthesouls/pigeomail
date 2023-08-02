@@ -4,14 +4,72 @@
     "title": "public-api.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "PublicAPI"
+    }
+  ],
   "consumes": [
     "application/json"
   ],
   "produces": [
     "application/json"
   ],
-  "paths": {},
+  "paths": {
+    "/api/pigeomail/v1/tempmail": {
+      "post": {
+        "operationId": "PublicAPI_CreateTemporaryEMailV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/pigeomailPublicAPICreateTemporaryEMailV1Response"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of pigeomailPublicAPICreateTemporaryEMailV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pigeomailPublicAPICreateTemporaryEMailV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "PublicAPI"
+        ]
+      }
+    }
+  },
   "definitions": {
+    "pigeomailPublicAPICreateTemporaryEMailV1Request": {
+      "type": "object"
+    },
+    "pigeomailPublicAPICreateTemporaryEMailV1Response": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        }
+      }
+    },
     "protobufAny": {
       "type": "object",
       "properties": {

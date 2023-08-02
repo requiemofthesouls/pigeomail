@@ -7,7 +7,10 @@
 package pigeomail_api_pb
 
 import (
+	context "context"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -15,12 +18,15 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-const ()
+const (
+	PublicAPI_CreateTemporaryEMailV1_FullMethodName = "/pigeomail.PublicAPI/CreateTemporaryEMailV1"
+)
 
 // PublicAPIClient is the client API for PublicAPI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PublicAPIClient interface {
+	CreateTemporaryEMailV1(ctx context.Context, in *PublicAPICreateTemporaryEMailV1Request, opts ...grpc.CallOption) (PublicAPI_CreateTemporaryEMailV1Client, error)
 }
 
 type publicAPIClient struct {
@@ -31,14 +37,51 @@ func NewPublicAPIClient(cc grpc.ClientConnInterface) PublicAPIClient {
 	return &publicAPIClient{cc}
 }
 
+func (c *publicAPIClient) CreateTemporaryEMailV1(ctx context.Context, in *PublicAPICreateTemporaryEMailV1Request, opts ...grpc.CallOption) (PublicAPI_CreateTemporaryEMailV1Client, error) {
+	stream, err := c.cc.NewStream(ctx, &PublicAPI_ServiceDesc.Streams[0], PublicAPI_CreateTemporaryEMailV1_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &publicAPICreateTemporaryEMailV1Client{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type PublicAPI_CreateTemporaryEMailV1Client interface {
+	Recv() (*PublicAPICreateTemporaryEMailV1Response, error)
+	grpc.ClientStream
+}
+
+type publicAPICreateTemporaryEMailV1Client struct {
+	grpc.ClientStream
+}
+
+func (x *publicAPICreateTemporaryEMailV1Client) Recv() (*PublicAPICreateTemporaryEMailV1Response, error) {
+	m := new(PublicAPICreateTemporaryEMailV1Response)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // PublicAPIServer is the server API for PublicAPI service.
 // All implementations should embed UnimplementedPublicAPIServer
 // for forward compatibility
 type PublicAPIServer interface {
+	CreateTemporaryEMailV1(*PublicAPICreateTemporaryEMailV1Request, PublicAPI_CreateTemporaryEMailV1Server) error
 }
 
 // UnimplementedPublicAPIServer should be embedded to have forward compatible implementations.
 type UnimplementedPublicAPIServer struct {
+}
+
+func (UnimplementedPublicAPIServer) CreateTemporaryEMailV1(*PublicAPICreateTemporaryEMailV1Request, PublicAPI_CreateTemporaryEMailV1Server) error {
+	return status.Errorf(codes.Unimplemented, "method CreateTemporaryEMailV1 not implemented")
 }
 
 // UnsafePublicAPIServer may be embedded to opt out of forward compatibility for this service.
@@ -52,6 +95,27 @@ func RegisterPublicAPIServer(s grpc.ServiceRegistrar, srv PublicAPIServer) {
 	s.RegisterService(&PublicAPI_ServiceDesc, srv)
 }
 
+func _PublicAPI_CreateTemporaryEMailV1_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(PublicAPICreateTemporaryEMailV1Request)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(PublicAPIServer).CreateTemporaryEMailV1(m, &publicAPICreateTemporaryEMailV1Server{stream})
+}
+
+type PublicAPI_CreateTemporaryEMailV1Server interface {
+	Send(*PublicAPICreateTemporaryEMailV1Response) error
+	grpc.ServerStream
+}
+
+type publicAPICreateTemporaryEMailV1Server struct {
+	grpc.ServerStream
+}
+
+func (x *publicAPICreateTemporaryEMailV1Server) Send(m *PublicAPICreateTemporaryEMailV1Response) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // PublicAPI_ServiceDesc is the grpc.ServiceDesc for PublicAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -59,6 +123,12 @@ var PublicAPI_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "pigeomail.PublicAPI",
 	HandlerType: (*PublicAPIServer)(nil),
 	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "public-api.proto",
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "CreateTemporaryEMailV1",
+			Handler:       _PublicAPI_CreateTemporaryEMailV1_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "public-api.proto",
 }
