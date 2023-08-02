@@ -8,6 +8,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/requiemofthesouls/container"
+
+	_ "github.com/requiemofthesouls/pigeomail/cmd/grpc/def"
+	_ "github.com/requiemofthesouls/pigeomail/cmd/http/def"
+	_ "github.com/requiemofthesouls/pigeomail/cmd/rmq/def"
 )
 
 var (

@@ -6,12 +6,15 @@ import (
 	"sync"
 	"time"
 
+	logDef "github.com/requiemofthesouls/logger/def"
 	receiverDef "github.com/requiemofthesouls/pigeomail/internal/receiver/def"
+	tgBotDef "github.com/requiemofthesouls/pigeomail/internal/telegram/def"
+	grpcService "github.com/requiemofthesouls/svc-grpc"
+	grpcServiceDef "github.com/requiemofthesouls/svc-grpc/def"
+	httpService "github.com/requiemofthesouls/svc-http"
+	httpServiceDef "github.com/requiemofthesouls/svc-http/def"
 	rmqDef "github.com/requiemofthesouls/svc-rmq/def"
 	"github.com/spf13/cobra"
-
-	logDef "github.com/requiemofthesouls/logger/def"
-	tgBotDef "github.com/requiemofthesouls/pigeomail/internal/telegram/def"
 )
 
 func init() {
@@ -25,6 +28,16 @@ func init() {
 func startService(_ *cobra.Command, _ []string) error {
 	var l logDef.Wrapper
 	if err := diContainer.Fill(logDef.DIWrapper, &l); err != nil {
+		return err
+	}
+
+	var grpcServerManager grpcService.Manager
+	if err := diContainer.Fill(grpcServiceDef.DIServerManager, &grpcServerManager); err != nil {
+		return err
+	}
+
+	var httpServerManager httpService.Manager
+	if err := diContainer.Fill(httpServiceDef.DIServerManager, &httpServerManager); err != nil {
 		return err
 	}
 
@@ -51,6 +64,12 @@ func startService(_ *cobra.Command, _ []string) error {
 	}()
 
 	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() { defer wg.Done(); grpcServerManager.StartAll(ctx) }()
+
+	wg.Add(1)
+	go func() { defer wg.Done(); httpServerManager.StartAll(ctx) }()
+
 	wg.Add(1)
 	go func() { defer wg.Done(); tgBot.Start(ctx) }()
 

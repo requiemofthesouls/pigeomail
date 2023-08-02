@@ -6,6 +6,18 @@ smtp_domain: "example.com"
 
 isStage: true
 
+grpcServers:
+  - name: "public-api"
+    address: ":20201"
+    http:
+      address: ":20202"
+  - name: "private-api"
+    address: ":20203"
+
+httpServers:
+  - name: "status-server"
+    address: ":20405"
+
 logger:
   caller: true
   stacktrace: error
