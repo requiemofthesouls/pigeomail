@@ -13,6 +13,7 @@ import (
 	"github.com/requiemofthesouls/logger"
 	pigeomail_api_pb "github.com/requiemofthesouls/pigeomail/api/pb"
 	"github.com/requiemofthesouls/pigeomail/internal/repository"
+	sseDef "github.com/requiemofthesouls/pigeomail/internal/sse/def"
 	pigeomailpb "github.com/requiemofthesouls/pigeomail/pb"
 	"go.uber.org/zap"
 )
@@ -22,6 +23,7 @@ type session struct {
 	publisher pigeomailpb.PublisherEventsRMQClient
 	repo      repository.TelegramUsers
 	logger    logger.Wrapper
+	sse       sseDef.Server
 }
 
 type email struct {
@@ -63,8 +65,11 @@ func (s *session) Rcpt(to string) error {
 	}
 
 	if !isExists {
-		l.Debug("mailbox not found, ignoring message")
-		return ErrMailNotDelivered
+		l.Debug("mailbox not found, checking for website connection")
+		if !s.sse.StreamExists(to) {
+			l.Debug("website email not found, ignoring")
+			return ErrMailNotDelivered
+		}
 	}
 
 	return nil

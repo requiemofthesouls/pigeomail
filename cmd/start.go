@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/r3labs/sse/v2"
 	logDef "github.com/requiemofthesouls/logger/def"
 	receiverDef "github.com/requiemofthesouls/pigeomail/internal/receiver/def"
+	sseDef "github.com/requiemofthesouls/pigeomail/internal/sse/def"
 	tgBotDef "github.com/requiemofthesouls/pigeomail/internal/telegram/def"
 	grpcService "github.com/requiemofthesouls/svc-grpc"
 	grpcServiceDef "github.com/requiemofthesouls/svc-grpc/def"
@@ -27,46 +27,28 @@ func init() {
 	})
 }
 
-func startSSE(l logDef.Wrapper) {
-	server := sse.New()
-
+func startSSE(server sseDef.Server, l logDef.Wrapper) {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/create_stream", func(w http.ResponseWriter, r *http.Request) {
-		// Get the StreamID from the URL
+	mux.HandleFunc("/api/pigeomail/v1/stream", func(w http.ResponseWriter, r *http.Request) {
 		streamID := r.URL.Query().Get("stream")
 		if streamID == "" {
 			http.Error(w, "Please specify a stream!", http.StatusInternalServerError)
 			return
 		}
 
-		stream := server.CreateStream(streamID)
-
-		l.Info("stream created: " + stream.ID)
-	})
-
-	mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
 		go func() {
 			// Received Browser Disconnection
 			<-r.Context().Done()
 			l.Info("The client is disconnected here")
+			// Remove Stream
+			server.RemoveStream(streamID)
 			return
 		}()
+
 		l.Info("new connection")
+
 		server.ServeHTTP(w, r)
-
-		for {
-			l.Info("sending event")
-			server.Publish("123", &sse.Event{
-				ID:      nil,
-				Data:    []byte(`{"ping": "pong"}`),
-				Event:   nil,
-				Retry:   nil,
-				Comment: nil,
-			})
-
-			time.Sleep(1 * time.Second)
-		}
 	})
 
 	l.Info("Starting SSE server on port 8080")
@@ -104,6 +86,11 @@ func startService(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
+	var sseServer sseDef.Server
+	if err := diContainer.Fill(sseDef.DISSEServer, &sseServer); err != nil {
+		return err
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	// graceful shutdown
 	go func() {
@@ -128,7 +115,7 @@ func startService(_ *cobra.Command, _ []string) error {
 	go func() { defer wg.Done(); receiver.Run(ctx) }()
 
 	wg.Add(1)
-	go func() { defer wg.Done(); startSSE(l) }()
+	go func() { defer wg.Done(); startSSE(sseServer, l) }()
 
 	<-ctx.Done()
 
