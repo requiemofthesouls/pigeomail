@@ -16,23 +16,14 @@
     "application/json"
   ],
   "paths": {
-    "/api/pigeomail/v1/tempmail": {
+    "/api/pigeomail/v1/mailbox": {
       "post": {
         "operationId": "PublicAPI_CreateTemporaryEMailV1",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/pigeomailPublicAPICreateTemporaryEMailV1Response"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of pigeomailPublicAPICreateTemporaryEMailV1Response"
+              "$ref": "#/definitions/pigeomailPublicAPICreateTemporaryEMailV1Response"
             }
           },
           "default": {

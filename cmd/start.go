@@ -3,9 +3,11 @@ package cmd
 import (
 	"context"
 	"errors"
+	"net/http"
 	"sync"
 	"time"
 
+	"github.com/r3labs/sse/v2"
 	logDef "github.com/requiemofthesouls/logger/def"
 	receiverDef "github.com/requiemofthesouls/pigeomail/internal/receiver/def"
 	tgBotDef "github.com/requiemofthesouls/pigeomail/internal/telegram/def"
@@ -23,6 +25,52 @@ func init() {
 		Short: "start pigeomail service",
 		RunE:  startService,
 	})
+}
+
+func startSSE(l logDef.Wrapper) {
+	server := sse.New()
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/create_stream", func(w http.ResponseWriter, r *http.Request) {
+		// Get the StreamID from the URL
+		streamID := r.URL.Query().Get("stream")
+		if streamID == "" {
+			http.Error(w, "Please specify a stream!", http.StatusInternalServerError)
+			return
+		}
+
+		stream := server.CreateStream(streamID)
+
+		l.Info("stream created: " + stream.ID)
+	})
+
+	mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
+		go func() {
+			// Received Browser Disconnection
+			<-r.Context().Done()
+			l.Info("The client is disconnected here")
+			return
+		}()
+		l.Info("new connection")
+		server.ServeHTTP(w, r)
+
+		for {
+			l.Info("sending event")
+			server.Publish("123", &sse.Event{
+				ID:      nil,
+				Data:    []byte(`{"ping": "pong"}`),
+				Event:   nil,
+				Retry:   nil,
+				Comment: nil,
+			})
+
+			time.Sleep(1 * time.Second)
+		}
+	})
+
+	l.Info("Starting SSE server on port 8080")
+	http.ListenAndServe(":8080", mux)
 }
 
 func startService(_ *cobra.Command, _ []string) error {
@@ -78,6 +126,9 @@ func startService(_ *cobra.Command, _ []string) error {
 
 	wg.Add(1)
 	go func() { defer wg.Done(); receiver.Run(ctx) }()
+
+	wg.Add(1)
+	go func() { defer wg.Done(); startSSE(l) }()
 
 	<-ctx.Done()
 

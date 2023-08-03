@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PublicAPIClient interface {
-	CreateTemporaryEMailV1(ctx context.Context, in *PublicAPICreateTemporaryEMailV1Request, opts ...grpc.CallOption) (PublicAPI_CreateTemporaryEMailV1Client, error)
+	CreateTemporaryEMailV1(ctx context.Context, in *PublicAPICreateTemporaryEMailV1Request, opts ...grpc.CallOption) (*PublicAPICreateTemporaryEMailV1Response, error)
 }
 
 type publicAPIClient struct {
@@ -37,51 +37,28 @@ func NewPublicAPIClient(cc grpc.ClientConnInterface) PublicAPIClient {
 	return &publicAPIClient{cc}
 }
 
-func (c *publicAPIClient) CreateTemporaryEMailV1(ctx context.Context, in *PublicAPICreateTemporaryEMailV1Request, opts ...grpc.CallOption) (PublicAPI_CreateTemporaryEMailV1Client, error) {
-	stream, err := c.cc.NewStream(ctx, &PublicAPI_ServiceDesc.Streams[0], PublicAPI_CreateTemporaryEMailV1_FullMethodName, opts...)
+func (c *publicAPIClient) CreateTemporaryEMailV1(ctx context.Context, in *PublicAPICreateTemporaryEMailV1Request, opts ...grpc.CallOption) (*PublicAPICreateTemporaryEMailV1Response, error) {
+	out := new(PublicAPICreateTemporaryEMailV1Response)
+	err := c.cc.Invoke(ctx, PublicAPI_CreateTemporaryEMailV1_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &publicAPICreateTemporaryEMailV1Client{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type PublicAPI_CreateTemporaryEMailV1Client interface {
-	Recv() (*PublicAPICreateTemporaryEMailV1Response, error)
-	grpc.ClientStream
-}
-
-type publicAPICreateTemporaryEMailV1Client struct {
-	grpc.ClientStream
-}
-
-func (x *publicAPICreateTemporaryEMailV1Client) Recv() (*PublicAPICreateTemporaryEMailV1Response, error) {
-	m := new(PublicAPICreateTemporaryEMailV1Response)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 // PublicAPIServer is the server API for PublicAPI service.
 // All implementations should embed UnimplementedPublicAPIServer
 // for forward compatibility
 type PublicAPIServer interface {
-	CreateTemporaryEMailV1(*PublicAPICreateTemporaryEMailV1Request, PublicAPI_CreateTemporaryEMailV1Server) error
+	CreateTemporaryEMailV1(context.Context, *PublicAPICreateTemporaryEMailV1Request) (*PublicAPICreateTemporaryEMailV1Response, error)
 }
 
 // UnimplementedPublicAPIServer should be embedded to have forward compatible implementations.
 type UnimplementedPublicAPIServer struct {
 }
 
-func (UnimplementedPublicAPIServer) CreateTemporaryEMailV1(*PublicAPICreateTemporaryEMailV1Request, PublicAPI_CreateTemporaryEMailV1Server) error {
-	return status.Errorf(codes.Unimplemented, "method CreateTemporaryEMailV1 not implemented")
+func (UnimplementedPublicAPIServer) CreateTemporaryEMailV1(context.Context, *PublicAPICreateTemporaryEMailV1Request) (*PublicAPICreateTemporaryEMailV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTemporaryEMailV1 not implemented")
 }
 
 // UnsafePublicAPIServer may be embedded to opt out of forward compatibility for this service.
@@ -95,25 +72,22 @@ func RegisterPublicAPIServer(s grpc.ServiceRegistrar, srv PublicAPIServer) {
 	s.RegisterService(&PublicAPI_ServiceDesc, srv)
 }
 
-func _PublicAPI_CreateTemporaryEMailV1_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(PublicAPICreateTemporaryEMailV1Request)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _PublicAPI_CreateTemporaryEMailV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublicAPICreateTemporaryEMailV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(PublicAPIServer).CreateTemporaryEMailV1(m, &publicAPICreateTemporaryEMailV1Server{stream})
-}
-
-type PublicAPI_CreateTemporaryEMailV1Server interface {
-	Send(*PublicAPICreateTemporaryEMailV1Response) error
-	grpc.ServerStream
-}
-
-type publicAPICreateTemporaryEMailV1Server struct {
-	grpc.ServerStream
-}
-
-func (x *publicAPICreateTemporaryEMailV1Server) Send(m *PublicAPICreateTemporaryEMailV1Response) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(PublicAPIServer).CreateTemporaryEMailV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PublicAPI_CreateTemporaryEMailV1_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PublicAPIServer).CreateTemporaryEMailV1(ctx, req.(*PublicAPICreateTemporaryEMailV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 // PublicAPI_ServiceDesc is the grpc.ServiceDesc for PublicAPI service.
@@ -122,13 +96,12 @@ func (x *publicAPICreateTemporaryEMailV1Server) Send(m *PublicAPICreateTemporary
 var PublicAPI_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "pigeomail.PublicAPI",
 	HandlerType: (*PublicAPIServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
+	Methods: []grpc.MethodDesc{
 		{
-			StreamName:    "CreateTemporaryEMailV1",
-			Handler:       _PublicAPI_CreateTemporaryEMailV1_Handler,
-			ServerStreams: true,
+			MethodName: "CreateTemporaryEMailV1",
+			Handler:    _PublicAPI_CreateTemporaryEMailV1_Handler,
 		},
 	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "public-api.proto",
 }
