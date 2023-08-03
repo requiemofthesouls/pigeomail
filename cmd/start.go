@@ -3,13 +3,11 @@ package cmd
 import (
 	"context"
 	"errors"
-	"net/http"
 	"sync"
 	"time"
 
 	logDef "github.com/requiemofthesouls/logger/def"
 	receiverDef "github.com/requiemofthesouls/pigeomail/internal/receiver/def"
-	sseDef "github.com/requiemofthesouls/pigeomail/internal/sse/def"
 	tgBotDef "github.com/requiemofthesouls/pigeomail/internal/telegram/def"
 	grpcService "github.com/requiemofthesouls/svc-grpc"
 	grpcServiceDef "github.com/requiemofthesouls/svc-grpc/def"
@@ -25,34 +23,6 @@ func init() {
 		Short: "start pigeomail service",
 		RunE:  startService,
 	})
-}
-
-func startSSE(server sseDef.Server, l logDef.Wrapper) {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/api/pigeomail/v1/stream", func(w http.ResponseWriter, r *http.Request) {
-		streamID := r.URL.Query().Get("stream")
-		if streamID == "" {
-			http.Error(w, "Please specify a stream!", http.StatusInternalServerError)
-			return
-		}
-
-		go func() {
-			// Received Browser Disconnection
-			<-r.Context().Done()
-			l.Info("The client is disconnected here")
-			// Remove Stream
-			server.RemoveStream(streamID)
-			return
-		}()
-
-		l.Info("new connection")
-
-		server.ServeHTTP(w, r)
-	})
-
-	l.Info("Starting SSE server on port 8080")
-	http.ListenAndServe(":8080", mux)
 }
 
 func startService(_ *cobra.Command, _ []string) error {
@@ -86,11 +56,6 @@ func startService(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var sseServer sseDef.Server
-	if err := diContainer.Fill(sseDef.DISSEServer, &sseServer); err != nil {
-		return err
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	// graceful shutdown
 	go func() {
@@ -113,9 +78,6 @@ func startService(_ *cobra.Command, _ []string) error {
 
 	wg.Add(1)
 	go func() { defer wg.Done(); receiver.Run(ctx) }()
-
-	wg.Add(1)
-	go func() { defer wg.Done(); startSSE(sseServer, l) }()
 
 	<-ctx.Done()
 

@@ -31,7 +31,7 @@ func (m *manager) CreateTemporaryEMailV1(
 func generateRandomEmail(smtpDomain string) string {
 	return fmt.Sprintf(
 		"%s@%s",
-		generateRandomString(32),
+		generateRandomString(12),
 		smtpDomain,
 	)
 }

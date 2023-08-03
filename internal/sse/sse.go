@@ -8,10 +8,8 @@ import (
 )
 
 func NewServer() *Server {
-	srv := sse.New()
-	srv.AutoStream = true
 	return &Server{
-		server: srv,
+		server: sse.New(),
 	}
 }
 

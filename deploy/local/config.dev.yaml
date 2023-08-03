@@ -17,6 +17,8 @@ grpcServers:
 httpServers:
   - name: "status-server"
     address: ":20405"
+  - name: "sse-server"
+    address: ":20406"
 
 logger:
   caller: true
