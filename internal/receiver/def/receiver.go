@@ -7,6 +7,7 @@ import (
 	rmqDef "github.com/requiemofthesouls/pigeomail/cmd/rmq/def"
 	"github.com/requiemofthesouls/pigeomail/internal/receiver"
 	repDef "github.com/requiemofthesouls/pigeomail/internal/repository/def"
+	sseDef "github.com/requiemofthesouls/pigeomail/internal/sse/def"
 )
 
 const DISMTPReceiver = "smtp.receiver"
@@ -44,11 +45,17 @@ func initSMTPReceiver(cont container.Container) (_ interface{}, err error) {
 		return nil, err
 	}
 
+	var sseServer sseDef.Server
+	if err = cont.Fill(sseDef.DISSEServer, &sseServer); err != nil {
+		return nil, err
+	}
+
 	var be receiver.Backend
 	if be, err = receiver.NewBackend(
 		emailRep,
 		publisher,
 		l,
+		sseServer,
 	); err != nil {
 		return nil, err
 	}

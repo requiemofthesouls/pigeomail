@@ -11,6 +11,7 @@ import (
 	pigeomail_api_pb "github.com/requiemofthesouls/pigeomail/api/pb"
 	"github.com/requiemofthesouls/pigeomail/internal/repository"
 	"github.com/requiemofthesouls/pigeomail/internal/repository/entity"
+	sseDef "github.com/requiemofthesouls/pigeomail/internal/sse/def"
 	"github.com/requiemofthesouls/pigeomail/pkg/modules/telegram"
 	"go.uber.org/zap"
 )
@@ -18,6 +19,7 @@ import (
 func NewSMTPMessageEventHandlerV1(
 	users repository.TelegramUsers,
 	telegram telegram.Wrapper,
+	sse sseDef.Server,
 ) *SMTPMessageEventHandlerV1 {
 	return &SMTPMessageEventHandlerV1{
 		repositories: smtpMessageEventHandlerV1Repositories{
@@ -25,6 +27,7 @@ func NewSMTPMessageEventHandlerV1(
 		},
 		clients: smtpMessageEventHandlerV1Clients{
 			telegram: telegram,
+			sse:      sse,
 		},
 	}
 }
@@ -41,6 +44,7 @@ type (
 
 	smtpMessageEventHandlerV1Clients struct {
 		telegram telegram.Wrapper
+		sse      sseDef.Server
 	}
 )
 
@@ -60,6 +64,12 @@ func (h *SMTPMessageEventHandlerV1) Handle(ctx context.Context, ev *pigeomail_ap
 
 	if !user.IsExist() {
 		l.Info("user not found")
+
+		l.Info("send message to web")
+		if err = h.clients.sse.Publish(ev.GetTo(), ev); err != nil {
+			l.Error("error send message to web", zap.Error(err))
+		}
+
 		return nil
 	}
 

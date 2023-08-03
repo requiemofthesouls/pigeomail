@@ -4,6 +4,7 @@ import (
 	"github.com/requiemofthesouls/container"
 	repDef "github.com/requiemofthesouls/pigeomail/internal/repository/def"
 	"github.com/requiemofthesouls/pigeomail/internal/rmq/listeners/smtp_message_events"
+	sseDef "github.com/requiemofthesouls/pigeomail/internal/sse/def"
 	pigeomailpb "github.com/requiemofthesouls/pigeomail/pb"
 	tgDef "github.com/requiemofthesouls/pigeomail/pkg/modules/telegram/def"
 	"github.com/requiemofthesouls/svc-rmq/server"
@@ -20,6 +21,11 @@ func smtpMessageEventsListener(cont container.Container) (interface{}, error) {
 		return nil, err
 	}
 
+	var sseServer sseDef.Server
+	if err := cont.Fill(sseDef.DISSEServer, &sseServer); err != nil {
+		return nil, err
+	}
+
 	return []server.ListenerRegistrant{
 		func(srv server.Manager) {
 			pigeomailpb.RegisterSMTPMessageEventsRMQServer(
@@ -28,6 +34,7 @@ func smtpMessageEventsListener(cont container.Container) (interface{}, error) {
 					smtp_message_events.NewSMTPMessageEventHandlerV1(
 						users,
 						telegram,
+						sseServer,
 					),
 				),
 			)
