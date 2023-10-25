@@ -25,7 +25,7 @@ require (
 	github.com/requiemofthesouls/svc-rmq v0.0.1
 	github.com/spf13/cobra v1.7.0
 	go.uber.org/zap v1.25.0
-	google.golang.org/grpc v1.57.0
+	google.golang.org/grpc v1.57.1
 )
 
 require (
